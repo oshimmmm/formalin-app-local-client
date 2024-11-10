@@ -1,7 +1,6 @@
 import React, { useContext } from 'react';
 import { FormalinContext } from '../context/FormalinContext';
 import FormalinTable from '../components/FormalinTable';
-import { Formalin } from '../types/Formalin';
 
 const List: React.FC = () => {
   const { formalinList } = useContext(FormalinContext);
