@@ -4,6 +4,7 @@ import FormalinTable from '../components/FormalinTable';
 import { Formalin } from '../types/Formalin';
 
 const Egress: React.FC = () => {
+  // useContextを使うことで、FormalinContext内のFormalinListやupdateFormalinStatusにアクセスして、データの取得、表示、更新を行う。
   const { formalinList, updateFormalinStatus } = useContext(FormalinContext);
   const inputRef = useRef<HTMLInputElement>(null);
   const [selectedPlace, setSelectedPlace] = useState<string>('内視鏡');

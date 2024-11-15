@@ -10,6 +10,8 @@ import List from './pages/List';
 
 const App: React.FC = () => {
   return (
+    // エントリポイントであるApp.tsxで、全てのコンポーネントをラッピング
+    // ラッピングされた子コンポーネントは、コンテキストのホルマリンリスト情報やデータ追加、更新の機能が使える
     <FormalinProvider>
       <Router>
         <Header />

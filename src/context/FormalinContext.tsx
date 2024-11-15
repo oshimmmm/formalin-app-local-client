@@ -12,16 +12,19 @@ interface FormalinContextProps {
   updateFormalinStatus: (id: string, data: Partial<Formalin>) => Promise<void>;
 }
 
+// 
 export const FormalinContext = createContext<FormalinContextProps>({
   formalinList: [],
   addFormalin: async () => {},
   updateFormalinStatus: async () => {},
 });
 
+
 interface FormalinProviderProps {
   children: ReactNode;
 }
 
+// ホルマリンリストの状態管理用のコンポーネント
 export const FormalinProvider: React.FC<FormalinProviderProps> = ({ children }) => {
   const [formalinList, setFormalinList] = useState<Formalin[]>([]);
 
@@ -63,6 +66,7 @@ export const FormalinProvider: React.FC<FormalinProviderProps> = ({ children }) 
   };
 
   return (
+    // ラッピングされた子コンポーネントは、コンテキストのデータと関数にアクセスできる
     <FormalinContext.Provider value={{ formalinList, addFormalin, updateFormalinStatus }}>
       {children}
     </FormalinContext.Provider>
