@@ -6,29 +6,43 @@ interface FormalinTableProps {
   formalinList: Formalin[];
 }
 
-// FormalinTableコンポーネントを、React.FC型で定義。受け取るプロパティは、FormalinTableProps。
+// FormalinTableコンポーネントを、React.FC型で定義。受け取るプロパティは、FormalinTablePropsつまりformalinListという配列プロパティで、中身はFormalin型。
 // {formalinList}とすることで、props.formalinListの代わりに、直接formalinListにアクセスできる。
 const FormalinTable: React.FC<FormalinTableProps> = ({ formalinList }) => {
+  
   // ソート設定の状態管理
+  // sortConfig:テーブルでどの列を基準にして、どの順序（昇順か降順か）でデータを並べるかを保持する。
   const [sortConfig, setSortConfig] = useState<{
-    key: keyof Formalin; // ソート対象の列
+    key: keyof Formalin; // ソートする列の名前。Folmarlin型のキー（key, place, status, timestampのどれか）
     direction: 'asc' | 'desc'; // ソートの方向（昇順または降順）
   } | null>(null); //初期値はnull（ソート無し）
 
-  // フィルタリングの状態管理
-  // テーブルで適用するフィルタ条件を管理
+  // フィルタ設定の状態管理
+  // selectedFilters:テーブルで適用するフィルタ条件を保持
   const [selectedFilters, setSelectedFilters] = useState<{
-    [key in keyof Formalin]?: string;
+    [key in keyof Formalin]?: string; //Formalin型のプロパティ（key, place, status, timestamp）を動的にキーとして扱う型
   }>({});
 
-  // 選択されたkeyに対して新しいフィルタ値Valueを設定する関数
+  // フィルタ条件を更新する関数
+  // 各列でフィルターを何か選択すると、選択された文言(e.target.value)がこの関数に渡されて、selectedFiltersの中身を更新する。
   const handleFilterChange = (key: keyof Formalin, value: string) => {
-    // 前のフィルタ設定を保ちつつ、指定したkeyの値を更新する
+    // (prev) => { ... }で、引数prevは、現在のselectedFilters状態の値を示す。更新時に、前のフィルタ設定を保ちつつ、指定したkey(key, place, status, timestamp)の値を更新する
     setSelectedFilters((prev) => ({
+      // ...prevで、現在のselectedFilters状態を展開して、新しいオブジェクト作成。
+      // これによって以前のフィルタ設定を維持したまま、新しいフィルタ条件を追加、上書きできる。
       ...prev,
+      // フィルタリンク対象の列（key）に新しい値（value）を設定。
       [key]: value || undefined, // valueが空の場合、undefinedに設定してフィルタ解除
     }));
+    console.log("selectedFilters is: ", selectedFilters);
   };
+  // handleFilterChangeの例
+  // 現在の状態
+  // selectedFilters = { key: '試薬IDの数字、5とか', status: '出庫済み'}
+  // handleFielterChange('place', '内視鏡')を呼び出したら、、
+  // selectedFilters = { key: '試薬ID', status: '出庫済み', place:'内視鏡'}
+  // handleFilterChange('status', '')を呼び出したら、、
+  // selectedFilters= { key: '試薬ID', place'内視鏡'}
 
   // 各列のユニークな値を取得
   const uniqueValues = {
@@ -100,20 +114,32 @@ const FormalinTable: React.FC<FormalinTableProps> = ({ formalinList }) => {
   }, [filteredFormalinList, sortConfig]);
 
   
-  // ソートをリクエストする関数
+  // 昇順か降順を実行する関数
+  // key（ソート対象となる列の名前）を引数として受け取る
+  // keyはFormalin型のプロパティ(key, place, status, timestamp)のどれか
+  // この関数はソート条件を変更して、状態(sortConfig)を更新する
   const requestSort = (key: keyof Formalin) => {
+    // sortConfigの初期状態として、ソート方向（direction）を昇順（asc）に設定
     let direction: 'asc' | 'desc' = 'asc';
+    // ソート設定(sortConfig)が存在している（null ではない）場合は、、、
+    // 現在ソート中の列（sortConfig.key）が、今回ソート対象に指定された列（key）と同じなら、、、
+    // 現在のソート方向（sortConfig.direction）が昇順（asc）の場合は、、、
     if (sortConfig && sortConfig.key === key && sortConfig.direction === 'asc') {
+      // 降順（desc）に切り替える
       direction = 'desc';
     }
+    // setSortConfig を呼び出して、新しいソート設定を sortConfig に保存
+    // ソート設定は、key: ソート対象となる列と、direction: ソートの方向（asc または desc）
     setSortConfig({ key, direction });
   };
+
 
   // ヘッダーのスタイルを取得する関数
   const getHeaderStyle = (columnKey: keyof Formalin) => {
     return {
       cursor: 'pointer',
       backgroundColor:
+        // ソートかけている列ヘッダー(sortConfig.key)だけ背景色が濃くなる
         sortConfig && sortConfig.key === columnKey ? '#e0e0e0' : '#f2f2f2',
     };
   };
@@ -138,12 +164,14 @@ const FormalinTable: React.FC<FormalinTableProps> = ({ formalinList }) => {
             <div
               onClick={() => requestSort('key')}
               style={{ ...getHeaderStyle('key') }}
+              className='text-2xl'
             >
-              Key
+              試薬ID
             </div>
             <select
               value={selectedFilters.key || ''}
               onChange={(e) => handleFilterChange('key', e.target.value)}
+              className="font-normal border border-gray-300 rounded"
             >
               <option value="">すべて</option>
               {uniqueValues.key.map((value) => (
@@ -164,12 +192,14 @@ const FormalinTable: React.FC<FormalinTableProps> = ({ formalinList }) => {
             <div
               onClick={() => requestSort('place')}
               style={{ ...getHeaderStyle('place') }}
+              className='text-2xl'
             >
-              Place
+              出庫先
             </div>
             <select
               value={selectedFilters.place || ''}
               onChange={(e) => handleFilterChange('place', e.target.value)}
+              className="font-normal border border-gray-300 rounded"
             >
               <option value="">すべて</option>
               {uniqueValues.place.map((value) => (
@@ -190,12 +220,14 @@ const FormalinTable: React.FC<FormalinTableProps> = ({ formalinList }) => {
             <div
               onClick={() => requestSort('status')}
               style={{ ...getHeaderStyle('status') }}
+              className='text-2xl'
             >
-              Status
+              状態
             </div>
             <select
               value={selectedFilters.status || ''}
               onChange={(e) => handleFilterChange('status', e.target.value)}
+              className="font-normal border border-gray-300 rounded"
             >
               <option value="">すべて</option>
               {uniqueValues.status.map((value) => (
@@ -216,12 +248,14 @@ const FormalinTable: React.FC<FormalinTableProps> = ({ formalinList }) => {
             <div
               onClick={() => requestSort('timestamp')}
               style={{ ...getHeaderStyle('timestamp') }}
+              className='text-2xl'
             >
-              Timestamp
+              最終更新日時
             </div>
             <select
               value={selectedFilters.timestamp || ''}
               onChange={(e) => handleFilterChange('timestamp', e.target.value)}
+              className="font-normal border border-gray-300 rounded"
             >
               <option value="">すべて</option>
               {uniqueValues.timestamp.map((value) => (

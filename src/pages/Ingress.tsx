@@ -42,20 +42,24 @@ const Ingress: React.FC = () => {
 
   return (
     <div>
-      <h1>入庫ページ</h1>
+      <h1 className='text-3xl font-bold mt-4 mb-10 ml-10'>入庫する</h1>
       {/* バーコード入力フィールド */}
       <input
         type="text"
         ref={inputRef}
         onKeyPress={handleScan}
         placeholder="二次元バーコードを読み込んでください"
-        style={{ fontSize: '1.5em', padding: '10px', width: '20%' }}
+        className="text-2xl border border-gray-300 rounded p-2 w-1/4 ml-10"
+        // style={{ fontSize: '1.5em', padding: '10px', width: '30%' }}
       />
 
       {errorMessage && <p style={{ color: 'red' }}>{errorMessage}</p>}
       
-      <h2>入庫済みホルマリン一覧</h2>
+      <h2 className='text-xl mx-10 mt-8 mb-2'>入庫済みホルマリン一覧</h2>
+      <div className='ml-10'>
       <FormalinTable formalinList={ingressedList} />
+      </div>
+      
     </div>
   );
 };

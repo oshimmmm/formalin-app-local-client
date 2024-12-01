@@ -7,8 +7,11 @@ const Home: React.FC = () => {
 
   return (
     <div>
-      <h1>ホーム</h1>
+      <h1 className='text-3xl font-bold my-4 ml-10'>ホーム</h1>
+      <div className='ml-10'>
       <FormalinTable formalinList={formalinList} />
+      </div>
+      
     </div>
   );
 };

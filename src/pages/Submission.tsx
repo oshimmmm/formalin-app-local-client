@@ -45,13 +45,14 @@ const Submission: React.FC = () => {
 
   return (
     <div>
-      <h1>提出ページ</h1>
+      <h1 className='text-3xl font-bold mt-4 mb-10 ml-10'>提出する</h1>
       <input
         type="text"
         ref={inputRef}
         onKeyPress={handleScan}
         placeholder="二次元バーコードを読み込んでください"
-        style={{ fontSize: '1.5em', padding: '10px', width: '20%' }}
+        className="text-2xl border border-gray-300 rounded p-2 w-1/4 ml-10"
+        // style={{ fontSize: '1.5em', padding: '10px', width: '30%' }}
       />
 
       {/* エラーメッセージの表示 */}
@@ -60,11 +61,13 @@ const Submission: React.FC = () => {
       
       <div style={{ display: 'flex', justifyContent: 'space-between' }}>
         <div style={{ width: '48%' }}>
-          <h2>未提出のホルマリン一覧（出庫済み）</h2>
+          <h2 className='text-xl mx-10 mt-8 mb-2'>未提出のホルマリン一覧（出庫済み）</h2>
+          <div className='ml-10'>
           <FormalinTable formalinList={pendingSubmissionList} />
+          </div>
         </div>
         <div style={{ width: '48%' }}>
-          <h2>提出済みのホルマリン一覧</h2>
+          <h2 className='text-xl mx-2 mt-8 mb-2'>提出済みのホルマリン一覧</h2>
           <FormalinTable formalinList={submittedList} />
         </div>
       </div>

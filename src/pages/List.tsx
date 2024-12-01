@@ -7,8 +7,10 @@ const List: React.FC = () => {
 
   return (
     <div>
-      <h1>一覧ページ</h1>
+      <h1 className='text-3xl font-bold mt-4 mb-10 ml-10'>一覧ページ</h1>
+      <div className='ml-10'>
       <FormalinTable formalinList={formalinList} />
+      </div>
     </div>
   );
 };

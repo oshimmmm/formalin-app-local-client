@@ -1,6 +1,6 @@
 import { addDoc, collection, doc, getDocs, updateDoc } from 'firebase/firestore';
 import { Formalin } from '../types/Formalin';
-import db from '../firebase';
+import { db } from '../firebase';
 
 // データの取得
 export const getFormalinData = async (): Promise<Formalin[]> => {
