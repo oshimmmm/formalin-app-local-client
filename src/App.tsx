@@ -10,9 +10,14 @@ import Submission from './pages/Submission';
 import List from './pages/List';
 import { auth } from './firebase';
 import Login from './pages/Login';
+import Register from './pages/Register';
+import Admin from './pages/Admin';
 
 const App: React.FC = () => {
   const [user] = useAuthState(auth);
+
+  // 管理者の判定（例としてメールアドレスで判定）
+  const isAdmin = user?.email === 'admin@example.com'; // 管理者のメールアドレスに置き換えてください
   
   return (
     // エントリポイントであるApp.tsxで、全てのコンポーネントをラッピング
@@ -23,6 +28,20 @@ const App: React.FC = () => {
         <Routes>
           {/* ログインしていない場合はログイン画面にリダイレクト */}
           <Route path="/login" element={<Login />} />
+
+          {/* 管理者のみがアクセスできるルート */}
+          <Route
+            path="/register"
+            element={
+              user && isAdmin ? <Register /> : <Navigate to="/login" />
+            }
+          />
+          <Route
+            path="/admin"
+            element={
+              user && isAdmin ? <Admin /> : <Navigate to="/login" />
+            }
+          />
           
           <Route path="/" element={user ? <Home /> : <Navigate to="/login" />} />
           <Route path="/ingress" element={user ? <Ingress /> : <Navigate to="/login" />} />
