@@ -1,20 +1,47 @@
+// pages/Login.tsx
 import React, { useState } from 'react';
+import { auth, db } from '../firebase';
 import { signInWithEmailAndPassword } from 'firebase/auth';
+import { collection, query, where, getDocs, doc, getDoc } from 'firebase/firestore';
 import { useNavigate } from 'react-router-dom';
-import { auth } from '../firebase';
 
 const Login: React.FC = () => {
-  const [email, setEmail] = useState('');
+  const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
   const navigate = useNavigate();
 
-  const handleLogin = async () => {
+  const handleLogin = async (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault(); // フォームのデフォルトの送信を防止
     try {
+       // 1. ユーザー名から UID を取得
+       const usernameDocRef = doc(db, 'usernames', username);
+       const usernameDoc    = await getDoc(usernameDocRef);
+
+      if (!usernameDoc.exists()) {
+        setError('ユーザー名またはパスワードが正しくありません。');
+        return;
+      }
+
+      const uid = usernameDoc.data()?.uid;
+
+      // 2. UID からメールアドレスを取得
+      const userDocRef = doc(db, 'users', uid);
+      const userDoc    = await getDoc(userDocRef);
+
+      const email = userDoc.data()?.email;
+
+      if (!email) {
+        setError('ユーザー情報の取得に失敗しました。');
+        return;
+      }
+
+      // 3. ログイン処理
       await signInWithEmailAndPassword(auth, email, password);
-      navigate('/'); // ログイン成功後にホーム画面へ遷移
-    } catch (error: any) {
+      navigate('/');
+    } catch (err) {
       setError('ログインに失敗しました。');
+      console.error('ログインエラー:', err);
     }
   };
 
@@ -23,26 +50,28 @@ const Login: React.FC = () => {
       <div className="bg-white p-8 rounded shadow-md w-80">
         <h1 className="text-2xl font-bold mb-4">ログイン</h1>
         {error && <p className="text-red-500">{error}</p>}
-        <input
-          type="email"
-          placeholder="メールアドレス"
-          value={email}
-          onChange={(e) => setEmail(e.target.value)}
-          className="w-full p-2 border border-gray-300 rounded mb-4"
-        />
-        <input
-          type="password"
-          placeholder="パスワード"
-          value={password}
-          onChange={(e) => setPassword(e.target.value)}
-          className="w-full p-2 border border-gray-300 rounded mb-4"
-        />
-        <button
-          onClick={handleLogin}
-          className="w-full bg-blue-500 text-white p-2 rounded hover:bg-blue-600"
-        >
-          ログイン
-        </button>
+        <form onSubmit={handleLogin}>
+          <input
+            type="text"
+            placeholder="ユーザー名"
+            value={username}
+            onChange={(e) => setUsername(e.target.value)}
+            className="w-full p-2 border border-gray-300 rounded mb-4"
+          />
+          <input
+            type="password"
+            placeholder="パスワード"
+            value={password}
+            onChange={(e) => setPassword(e.target.value)}
+            className="w-full p-2 border border-gray-300 rounded mb-4"
+          />
+          <button
+            type="submit"
+            className="w-full bg-blue-500 text-white p-2 rounded hover:bg-blue-600"
+          >
+            ログイン
+          </button>
+        </form>
       </div>
     </div>
   );
