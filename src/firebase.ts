@@ -1,6 +1,6 @@
 import { initializeApp } from "firebase/app";
 import { getFirestore } from "firebase/firestore";
-import { getAuth } from "firebase/auth";
+import { browserSessionPersistence, getAuth, setPersistence } from "firebase/auth";
 
 const firebaseConfig = {
     apiKey: process.env.REACT_APP_FIREBASE_APIKEY,
@@ -14,5 +14,10 @@ const firebaseConfig = {
   const app = initializeApp(firebaseConfig);
   const db = getFirestore(app);
   const auth = getAuth(app);
+
+  // 認証状態の永続化をセッション単位に設定
+  setPersistence(auth, browserSessionPersistence).catch((error) => {
+    console.error('認証状態の永続化設定中にエラーが発生しました:', error);
+});
 
   export {db, auth};
