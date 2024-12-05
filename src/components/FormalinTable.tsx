@@ -54,6 +54,8 @@ const FormalinTable: React.FC<FormalinTableProps> = ({ formalinList }) => {
       // toLocaleStringメソッドで文字列に変換
       new Set(formalinList.map((item) => item.timestamp.toLocaleString()))
     ),
+    size: Array.from(new Set(formalinList.map((item) => item.size))),
+    expired: Array.from(new Set(formalinList.map((item) => item.expired.toLocaleString()))),
   };
 
   // 選択されたフィルタ条件に一致する項目だけを含む配列
@@ -62,6 +64,9 @@ const FormalinTable: React.FC<FormalinTableProps> = ({ formalinList }) => {
       if (!value) return true;
       if (key === 'timestamp') {
         return item.timestamp.toLocaleString() === value;
+      }
+      if (key === 'expired') {
+        return item.expired.toLocaleString() === value;
       }
       return item[key as keyof Formalin] === value;
     });
@@ -85,6 +90,10 @@ const FormalinTable: React.FC<FormalinTableProps> = ({ formalinList }) => {
         if (sortConfig.key === 'timestamp') {
           aValue = a.timestamp.getTime();
           bValue = b.timestamp.getTime();
+
+        } else if (sortConfig.key === 'expired') {
+          aValue = a.expired.getTime();
+          bValue = b.expired.getTime();
 
           // 文字列でソートするなら、大文字と小文字を区別しないように全て小文字に変換
         } else if (typeof aValue === 'string' && typeof bValue === 'string') {
@@ -145,26 +154,15 @@ const FormalinTable: React.FC<FormalinTableProps> = ({ formalinList }) => {
   };
 
   return (
-    <table
-      style={{
-        width: '80%',
-        fontSize: '1.1em',
-      }}
-    >
+    <table className="w-4/5 text-lg">
       <thead>
         <tr>
           {/* Key 列 */}
-          <th
-            style={{
-              border: '1px solid #ddd',
-              padding: '10px',
-              textAlign: 'left',
-            }}
-          >
+          <th className="border border-gray-300 p-2 text-left">
             <div
               onClick={() => requestSort('key')}
               style={{ ...getHeaderStyle('key') }}
-              className='text-2xl'
+              className='text-xl cursor-pointer'
             >
               試薬ID
             </div>
@@ -182,17 +180,11 @@ const FormalinTable: React.FC<FormalinTableProps> = ({ formalinList }) => {
             </select>
           </th>
           {/* Place 列 */}
-          <th
-            style={{
-              border: '1px solid #ddd',
-              padding: '10px',
-              textAlign: 'left',
-            }}
-          >
+          <th className="border border-gray-300 p-2 text-left">
             <div
               onClick={() => requestSort('place')}
               style={{ ...getHeaderStyle('place') }}
-              className='text-2xl'
+              className='text-xl cursor-pointer'
             >
               出庫先
             </div>
@@ -210,17 +202,11 @@ const FormalinTable: React.FC<FormalinTableProps> = ({ formalinList }) => {
             </select>
           </th>
           {/* Status 列 */}
-          <th
-            style={{
-              border: '1px solid #ddd',
-              padding: '10px',
-              textAlign: 'left',
-            }}
-          >
+          <th className="border border-gray-300 p-2 text-left">
             <div
               onClick={() => requestSort('status')}
               style={{ ...getHeaderStyle('status') }}
-              className='text-2xl'
+              className='text-xl cursor-pointer'
             >
               状態
             </div>
@@ -238,17 +224,11 @@ const FormalinTable: React.FC<FormalinTableProps> = ({ formalinList }) => {
             </select>
           </th>
           {/* Timestamp 列 */}
-          <th
-            style={{
-              border: '1px solid #ddd',
-              padding: '10px',
-              textAlign: 'left',
-            }}
-          >
+          <th className="border border-gray-300 p-2 text-left">
             <div
               onClick={() => requestSort('timestamp')}
               style={{ ...getHeaderStyle('timestamp') }}
-              className='text-2xl'
+              className='text-xl cursor-pointer'
             >
               最終更新日時
             </div>
@@ -262,6 +242,48 @@ const FormalinTable: React.FC<FormalinTableProps> = ({ formalinList }) => {
                 <option key={value} value={value}>
                   {value}
                 </option>
+              ))}
+            </select>
+          </th>
+
+           {/* Size 列 */}
+           <th className="border border-gray-300 p-2 text-left">
+            <div
+              onClick={() => requestSort('size')}
+              style={getHeaderStyle('size')}
+              className='text-xl cursor-pointer'
+            >
+              規格
+            </div>
+            <select
+              value={selectedFilters.size || ''}
+              onChange={(e) => handleFilterChange('size', e.target.value)}
+              className="font-normal border border-gray-300 rounded"
+            >
+              <option value="">すべて</option>
+              {uniqueValues.size.map((value) => (
+                <option key={value} value={value}>{value}</option>
+              ))}
+            </select>
+          </th>
+
+          {/* Expired 列 */}
+          <th className="border border-gray-300 p-2 text-left">
+            <div
+              onClick={() => requestSort('expired')}
+              style={getHeaderStyle('expired')}
+              className='text-xl cursor-pointer'
+            >
+              有効期限
+            </div>
+            <select
+              value={selectedFilters.expired || ''}
+              onChange={(e) => handleFilterChange('expired', e.target.value)}
+              className="font-normal border border-gray-300 rounded"
+            >
+              <option value="">すべて</option>
+              {uniqueValues.expired.map((value) => (
+                <option key={value} value={value}>{value}</option>
               ))}
             </select>
           </th>

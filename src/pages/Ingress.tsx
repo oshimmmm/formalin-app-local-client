@@ -2,6 +2,7 @@ import React, { useContext, useRef, useEffect, KeyboardEvent, useState } from 'r
 import { FormalinContext } from '../context/FormalinContext';
 import FormalinTable from '../components/FormalinTable';
 import { Formalin } from '../types/Formalin';
+import { parseFormalinCode } from '../utils/parseFormalinCode';
 
 const Ingress: React.FC = () => {
   const { formalinList, addFormalin } = useContext(FormalinContext);
@@ -19,19 +20,30 @@ const Ingress: React.FC = () => {
   const handleScan = async (e: KeyboardEvent<HTMLInputElement>) => {
     if (e.key === 'Enter') {
       const target = e.target as HTMLInputElement;
-      const key = target.value.trim();
-      if (key) {
+      const code = target.value.trim();
+      if (code) {
+        const parsed = parseFormalinCode(code);
+        if (!parsed) {
+          setErrorMessage('無効なコードです。');
+          target.value = '';
+          return;
+        }
+
+        const { serialNumber, size, expirationDate } = parsed;
+
         // 既存のホルマリンを検索
-        const existingFormalin = formalinList.find((f) => f.key === key);
+        const existingFormalin = formalinList.find((f) => f.key === serialNumber);
         if (existingFormalin) {
           setErrorMessage('このホルマリンは既に入庫済です。');
         } else {
           // 新規データを追加
           await addFormalin({
-            key,
+            key: serialNumber,
             place: '病理',
             status: '入庫済み',
             timestamp: new Date(),
+            size: size,
+            expired: expirationDate,
           });
           setErrorMessage('');
         }

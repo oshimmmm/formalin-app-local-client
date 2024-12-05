@@ -2,6 +2,7 @@ import React, { useContext, useRef, useEffect, useState, KeyboardEvent } from 'r
 import { FormalinContext } from '../context/FormalinContext';
 import FormalinTable from '../components/FormalinTable';
 import { Formalin } from '../types/Formalin';
+import { parseFormalinCode } from '../utils/parseFormalinCode';
 
 const Egress: React.FC = () => {
   // useContextを使うことで、FormalinContext内のFormalinListやupdateFormalinStatusにアクセスして、データの取得、表示、更新を行う。
@@ -25,10 +26,19 @@ const Egress: React.FC = () => {
   const handleScan = async (e: KeyboardEvent<HTMLInputElement>) => {
     if (e.key === 'Enter') {
       const target = e.target as HTMLInputElement;
-      const key = target.value.trim();
-      if (key) {
+      const code = target.value.trim();
+      if (code) {
+        const parsed = parseFormalinCode(code);
+        if (!parsed) {
+          setErrorMessage('無効なコードです。');
+          target.value = '';
+          return;
+        }
+
+        const { serialNumber } = parsed;
+
         // 既存のホルマリンを検索
-        const existingFormalin = formalinList.find((f: Formalin) => f.key === key);
+        const existingFormalin = formalinList.find((f: Formalin) => f.key === serialNumber);
         if (existingFormalin) {
           // 既存の場合、状態と場所を更新
           await updateFormalinStatus(existingFormalin.id, {
@@ -36,7 +46,7 @@ const Egress: React.FC = () => {
             place: selectedPlace,
             timestamp: new Date(),
           });
-          setErrorMessage(''); // エラーメッセージをクリア
+          setErrorMessage('');
         } else {
           // エラーメッセージを表示
           setErrorMessage('入庫されていません。');

@@ -2,6 +2,7 @@ import React, { useContext, useRef, useEffect, KeyboardEvent, useState } from 'r
 import { FormalinContext } from '../context/FormalinContext';
 import FormalinTable from '../components/FormalinTable';
 import { Formalin } from '../types/Formalin';
+import { parseFormalinCode } from '../utils/parseFormalinCode';
 
 const Submission: React.FC = () => {
   const { formalinList, updateFormalinStatus } = useContext(FormalinContext);
@@ -22,9 +23,18 @@ const Submission: React.FC = () => {
   const handleScan = async (e: KeyboardEvent<HTMLInputElement>) => {
     if (e.key === 'Enter') {
       const target = e.target as HTMLInputElement;
-      const key = target.value.trim();
-      if (key) {
-        const existingFormalin = formalinList.find((f: Formalin) => f.key === key);
+      const code = target.value.trim();
+      if (code) {
+        const parsed = parseFormalinCode(code);
+        if (!parsed) {
+          setErrorMessage('無効なコードです。');
+          target.value = '';
+          return;
+        }
+
+        const { serialNumber } = parsed;
+
+        const existingFormalin = formalinList.find((f: Formalin) => f.key === serialNumber);
         if (existingFormalin) {
           if (existingFormalin.status === '出庫済み') {
             await updateFormalinStatus(existingFormalin.id, {

@@ -14,6 +14,8 @@ export const getFormalinData = async (): Promise<Formalin[]> => {
       place: data.place,
       status: data.status,
       timestamp: data.timestamp.toDate(),
+      size: data.size,
+      expired: data.expired.toDate(),
     } as Formalin;
   });
   return formalinList;
