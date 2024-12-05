@@ -35,40 +35,66 @@ const Admin: React.FC = () => {
 
   return (
     <div>
-      <h1>管理者ページ</h1>
-      <table>
+      <h1  className='text-3xl font-bold mt-4 mb-10 ml-10'>管理者専用ページ</h1>
+      <table className="w-4/5 text-lg ml-2.5">
         <thead>
           <tr>
-            <th>ID</th>
-            <th>Place</th>
-            <th>Status</th>
-            <th>操作</th>
+            <th className="border border-gray-300 p-2.5 text-left">
+              ID
+            </th>
+            <th className="border border-gray-300 p-2.5 text-left">
+              Place
+            </th>
+            <th className="border border-gray-300 p-2.5 text-left">
+              Status
+            </th>
+            <th className="border border-gray-300 p-2.5 text-left">
+              操作
+            </th>
           </tr>
         </thead>
         <tbody>
           {posts.map((post) => (
-            <tr key={post.id}>
-              <td>{post.id}</td>
-              <td>
+            <tr 
+              key={post.id}
+              className="bg-white hover:bg-gray-50"
+              onMouseEnter={(e) => {
+                e.currentTarget.style.backgroundColor = '#f9f9f9';
+              }}
+              onMouseLeave={(e) => {
+                e.currentTarget.style.backgroundColor = '#fff';
+              }}
+            >
+              <td className="border border-gray-300 p-2.5">
+                {post.key}
+              </td>
+              <td className="border border-gray-300 p-2.5">
                 <input
                   type="text"
                   value={post.place}
+                  className="w-full p-1 border border-gray-300 rounded"
                   onChange={(e) =>
                     handleUpdate(post.id, { place: e.target.value })
                   }
                 />
               </td>
-              <td>
+              <td className="border border-gray-300 p-2.5">
                 <input
                   type="text"
                   value={post.status}
+                  className="w-full p-1 border border-gray-300 rounded"
                   onChange={(e) =>
                     handleUpdate(post.id, { status: e.target.value })
                   }
                 />
               </td>
-              <td>
-                <button onClick={() => handleDelete(post.id)}>削除</button>
+              <td className="border border-gray-300 p-2.5">
+                <button
+                  onClick={() => handleDelete(post.id)}
+                  className="bg-red-500 text-white px-4 py-2 rounded hover:bg-red-600"
+                >
+                  削除
+                </button>
               </td>
             </tr>
           ))}

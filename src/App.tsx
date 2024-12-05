@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import { useAuthState } from 'react-firebase-hooks/auth';
 import { FormalinProvider } from './context/FormalinContext';
@@ -8,16 +8,40 @@ import Ingress from './pages/Ingress';
 import Egress from './pages/Egress';
 import Submission from './pages/Submission';
 import List from './pages/List';
-import { auth } from './firebase';
+import { auth, db } from './firebase';
 import Login from './pages/Login';
 import Register from './pages/Register';
 import Admin from './pages/Admin';
+import { doc, getDoc } from 'firebase/firestore';
 
 const App: React.FC = () => {
   const [user] = useAuthState(auth);
+  const [isAdmin, setIsAdmin] = useState<boolean>(false);
 
-  // 管理者の判定（例としてメールアドレスで判定）
-  const isAdmin = user?.email === 'admin@example.com'; // 管理者のメールアドレスに置き換えてください
+  useEffect(() => {
+    const fetchIsAdmin = async () => {
+      if (user) {
+        try {
+          const userDocRef = doc(db, 'users', user.uid);
+          const userDoc = await getDoc(userDocRef);
+          if (userDoc.exists()) {
+            setIsAdmin(userDoc.data()?.isAdmin === true);
+          } else {
+            console.error('ユーザードキュメントが存在しません。');
+            setIsAdmin(false);
+          }
+        } catch (error) {
+          console.error('isAdmin の取得中にエラーが発生しました:', error);
+          setIsAdmin(false);
+        }
+      } else {
+        setIsAdmin(false);
+      }
+    };
+
+    fetchIsAdmin();
+  }, [user]);
+
   
   return (
     // エントリポイントであるApp.tsxで、全てのコンポーネントをラッピング
@@ -27,7 +51,7 @@ const App: React.FC = () => {
         <Header />
         <Routes>
           {/* ログインしていない場合はログイン画面にリダイレクト */}
-          <Route path="/login" element={<Login />} />
+          <Route path="/login" element={!user ? <Login /> : <Navigate to="/" />} />
 
           {/* 管理者のみがアクセスできるルート */}
           <Route

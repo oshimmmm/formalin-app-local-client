@@ -33,7 +33,7 @@ const Register: React.FC = () => {
       await setDoc(doc(db, 'users', uid), {
         username: username,
         email: email,
-        isAdmin: true, // 管理者であれば true、一般ユーザーは false または省略
+        isAdmin: false, // 管理者であれば true、一般ユーザーは false または省略
       });
 
       // usernames コレクションにユーザー名とUIDを保存

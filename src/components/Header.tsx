@@ -25,9 +25,12 @@ const Header: React.FC = () => {
       if (currentUser) {
         try {
           const userDocRef = doc(db, 'users', currentUser.uid);
+          console.log("currentUser is :", currentUser.uid);
           const userDoc = await getDoc(userDocRef);
+          console.log("userDoc is :", userDoc);
           if (userDoc.exists()) {
             const userData = userDoc.data();
+            console.log("userData is :", userData);
             setUsername(userData?.username);
             setIsAdmin(userData?.isAdmin === true);
           } else {
