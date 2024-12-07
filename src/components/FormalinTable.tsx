@@ -303,37 +303,23 @@ const FormalinTable: React.FC<FormalinTableProps> = ({ formalinList }) => {
               e.currentTarget.style.backgroundColor = '#fff';
             }}
           >
-            <td
-              style={{
-                border: '1px solid #ddd',
-                padding: '10px',
-              }}
-            >
+            <td className="border border-gray-300 p-2">
               {f.key}
             </td>
-            <td
-              style={{
-                border: '1px solid #ddd',
-                padding: '10px',
-              }}
-            >
+            <td className="border border-gray-300 p-2">
               {f.place}
             </td>
-            <td
-              style={{
-                border: '1px solid #ddd',
-                padding: '10px',
-              }}
-            >
+            <td className="border border-gray-300 p-2">
               {f.status}
             </td>
-            <td
-              style={{
-                border: '1px solid #ddd',
-                padding: '10px',
-              }}
-            >
+            <td className="border border-gray-300 p-2">
               {f.timestamp.toLocaleString()}
+            </td>
+            <td className="border border-gray-300 p-2">
+              {f.size}
+            </td>
+            <td className="border border-gray-300 p-2">
+              {f.expired.toLocaleString()}
             </td>
           </tr>
         ))}

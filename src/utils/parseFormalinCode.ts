@@ -13,13 +13,13 @@ export interface ParsedFormalinCode {
     }
   
     // シリアルナンバー：コード内の位置を特定して抽出
-    const serialNumber = code.substr(28, 14); // 29文字目から14文字
+    const serialNumber = code.substr(34, 14); // 34文字目から14文字
   
     // ロットナンバー
-    const lotNumber = code.substr(24, 6); // 25文字目から6文字
+    const lotNumber = code.substr(26, 6); // 26文字目から6文字
   
     // 有効期限
-    const expiration = code.substr(20, 6); // 21文字目から6文字
+    const expiration = code.substr(18, 6); // 18文字目から6文字
     const expYear = parseInt('20' + expiration.substr(0, 2), 10); // 20XX年
     const expMonth = parseInt(expiration.substr(2, 2), 10); // 月
     const expDay = parseInt(expiration.substr(4, 2), 10); // 日
