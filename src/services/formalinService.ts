@@ -1,6 +1,15 @@
-import { addDoc, collection, doc, getDocs, updateDoc } from 'firebase/firestore';
+import { addDoc, arrayUnion, collection, doc, getDocs, updateDoc } from 'firebase/firestore';
 import { Formalin } from '../types/Formalin';
 import { db } from '../firebase';
+
+interface HistoryEntry {
+  updatedBy: string;
+  updatedAt: Date;
+  oldStatus?: string;
+  newStatus?: string;
+  oldPlace?: string;
+  newPlace?: string;
+}
 
 // データの取得
 export const getFormalinData = async (): Promise<Formalin[]> => {
@@ -16,7 +25,9 @@ export const getFormalinData = async (): Promise<Formalin[]> => {
       timestamp: data.timestamp.toDate(),
       size: data.size || '不明',
       expired: data.expired ? data.expired.toDate() : new Date(),
-    } as Formalin;
+      lotNumber: data.lotNumber || '',
+      history: data.history || []
+    } as Formalin & { history?: HistoryEntry[] };
   });
   return formalinList;
 };
@@ -28,7 +39,14 @@ export const addFormalinData = async (formalin: Omit<Formalin, 'id'>): Promise<v
 };
 
 // データの更新
-export const updateFormalinData = async (id: string, data: Partial<Formalin>): Promise<void> => {
-    const formalinDoc = doc(db, 'posts', id);
-    await updateDoc(formalinDoc, data);
+export const updateFormalinData = async (id: string, data: Partial<Formalin>, historyEntry?: HistoryEntry): Promise<void> => {
+  const formalinDoc = doc(db, 'posts', id);
+
+  const updateData: any = { ...data };
+  if (historyEntry) {
+    // arrayUnionを使ってhistory配列に新たな更新ログを追加
+    updateData.history = arrayUnion(historyEntry);
+  }
+
+  await updateDoc(formalinDoc, updateData);
 };
