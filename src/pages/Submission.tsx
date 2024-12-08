@@ -9,11 +9,29 @@ const Submission: React.FC = () => {
   const inputRef = useRef<HTMLInputElement>(null);
   const [errorMessage, setErrorMessage] = useState<string>('');
 
+  // 親要素のref
+  const containerRef = useRef<HTMLDivElement>(null);
+  const [shouldScale, setShouldScale] = useState(false);
+
   useEffect(() => {
     if (inputRef.current) {
       inputRef.current.focus();
     }
-  }, []);
+
+    if (containerRef.current) {
+      // 親要素の幅と、親要素の親要素の幅を取得
+      const containerWidth = containerRef.current.offsetWidth;
+      const parentWidth = containerRef.current.parentElement?.offsetWidth || containerWidth;
+      const ratio = containerWidth / parentWidth;
+
+      // 幅が50%未満の場合のみ縮小表示
+      if (ratio < 0.5) {
+        setShouldScale(true);
+      } else {
+        setShouldScale(false);
+      }
+    }
+  }, [formalinList]);
 
   // '出庫済み'のホルマリン一覧
   const pendingSubmissionList = formalinList.filter((f: Formalin) => f.status === '出庫済み');
@@ -33,6 +51,7 @@ const Submission: React.FC = () => {
         }
 
         const { serialNumber } = parsed;
+        console.log("serialNumber is ", serialNumber);
 
         const existingFormalin = formalinList.find((f: Formalin) => f.key === serialNumber);
         if (existingFormalin) {
@@ -69,14 +88,14 @@ const Submission: React.FC = () => {
       {errorMessage && <p style={{ color: 'red' }}>{errorMessage}</p>}
 
       
-      <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-        <div style={{ width: '48%' }}>
+      <div ref={containerRef} style={{ display: 'flex', justifyContent: 'space-between', width: '100%', transform: shouldScale ? 'scale(0.9)' : 'none', transformOrigin: 'top left' }}>
+        <div style={{ width: '50%' }}>
           <h2 className='text-xl mx-10 mt-8 mb-2'>未提出のホルマリン一覧（出庫済み）</h2>
-          <div className='ml-10'>
+          <div className='ml-2'>
           <FormalinTable formalinList={pendingSubmissionList} />
           </div>
         </div>
-        <div style={{ width: '48%' }}>
+        <div style={{ width: '50%' }}>
           <h2 className='text-xl mx-2 mt-8 mb-2'>提出済みのホルマリン一覧</h2>
           <FormalinTable formalinList={submittedList} />
         </div>
