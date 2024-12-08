@@ -123,7 +123,7 @@ const Header: React.FC = () => {
               to="/list" 
               className="text-xl hover:text-yellow-400 transition duration-300"
             >
-              一覧
+              試薬詳細一覧
             </Link>
           </li>
 
@@ -143,7 +143,7 @@ const Header: React.FC = () => {
                   to="/admin"
                   className="text-xl hover:text-yellow-400 transition duration-300"
                 >
-                  管理者ページ
+                  管理修正
                 </Link>
               </li>
             </>
