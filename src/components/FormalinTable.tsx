@@ -4,11 +4,14 @@ import { Formalin } from '../types/Formalin';
 interface FormalinTableProps {
   // ホルマリンリストという配列プロパティを持ち、各要素はFormalin型
   formalinList: Formalin[];
+  showLotNumber?: boolean; // ロットナンバーを表示させるページはList.tsxのみにしたい
+  showHistoryButton?: boolean; // 履歴ボタンを表示させるページはList.tsxのみにしたい
+  onHistoryClick?: (key: string) => void; // 履歴ボタンがクリックされた時のコールバックを追加
 }
 
 // FormalinTableコンポーネントを、React.FC型で定義。受け取るプロパティは、FormalinTablePropsつまりformalinListという配列プロパティで、中身はFormalin型。
 // {formalinList}とすることで、props.formalinListの代わりに、直接formalinListにアクセスできる。
-const FormalinTable: React.FC<FormalinTableProps> = ({ formalinList }) => {
+const FormalinTable: React.FC<FormalinTableProps> = ({ formalinList, showLotNumber = false, showHistoryButton = false, onHistoryClick }) => {
   
   // ソート設定の状態管理
   // sortConfig:テーブルでどの列を基準にして、どの順序（昇順か降順か）でデータを並べるかを保持する。
@@ -56,6 +59,7 @@ const FormalinTable: React.FC<FormalinTableProps> = ({ formalinList }) => {
     ),
     size: Array.from(new Set(formalinList.map((item) => item.size))),
     expired: Array.from(new Set(formalinList.map((item) => item.expired.toLocaleString()))),
+    lotNumber: Array.from(new Set(formalinList.map((item) => item.lotNumber)))
   };
 
   // 選択されたフィルタ条件に一致する項目だけを含む配列
@@ -154,22 +158,22 @@ const FormalinTable: React.FC<FormalinTableProps> = ({ formalinList }) => {
   };
 
   return (
-    <table className="w-4/5 text-lg">
+    <table className="w-11/12 table-fixed text-lg">
       <thead>
         <tr>
           {/* Key 列 */}
-          <th className="border border-gray-300 p-2 text-left">
+          <th className="border border-gray-300 p-2 text-left whitespace-normal break-words">
             <div
               onClick={() => requestSort('key')}
               style={{ ...getHeaderStyle('key') }}
-              className='text-xl cursor-pointer'
+              className='text-lg cursor-pointer'
             >
               試薬ID
             </div>
             <select
               value={selectedFilters.key || ''}
               onChange={(e) => handleFilterChange('key', e.target.value)}
-              className="font-normal border border-gray-300 rounded"
+              className="font-normal border border-gray-300 rounded w-full"
             >
               <option value="">すべて</option>
               {uniqueValues.key.map((value) => (
@@ -184,14 +188,14 @@ const FormalinTable: React.FC<FormalinTableProps> = ({ formalinList }) => {
             <div
               onClick={() => requestSort('place')}
               style={{ ...getHeaderStyle('place') }}
-              className='text-xl cursor-pointer'
+              className='text-lg cursor-pointer'
             >
               出庫先
             </div>
             <select
               value={selectedFilters.place || ''}
               onChange={(e) => handleFilterChange('place', e.target.value)}
-              className="font-normal border border-gray-300 rounded"
+              className="font-normal border border-gray-300 rounded w-full"
             >
               <option value="">すべて</option>
               {uniqueValues.place.map((value) => (
@@ -206,14 +210,14 @@ const FormalinTable: React.FC<FormalinTableProps> = ({ formalinList }) => {
             <div
               onClick={() => requestSort('status')}
               style={{ ...getHeaderStyle('status') }}
-              className='text-xl cursor-pointer'
+              className='text-lg cursor-pointer'
             >
               状態
             </div>
             <select
               value={selectedFilters.status || ''}
               onChange={(e) => handleFilterChange('status', e.target.value)}
-              className="font-normal border border-gray-300 rounded"
+              className="font-normal border border-gray-300 rounded w-full"
             >
               <option value="">すべて</option>
               {uniqueValues.status.map((value) => (
@@ -228,14 +232,14 @@ const FormalinTable: React.FC<FormalinTableProps> = ({ formalinList }) => {
             <div
               onClick={() => requestSort('timestamp')}
               style={{ ...getHeaderStyle('timestamp') }}
-              className='text-xl cursor-pointer'
+              className='text-lg cursor-pointer'
             >
               最終更新日時
             </div>
             <select
               value={selectedFilters.timestamp || ''}
               onChange={(e) => handleFilterChange('timestamp', e.target.value)}
-              className="font-normal border border-gray-300 rounded"
+              className="font-normal border border-gray-300 rounded w-full"
             >
               <option value="">すべて</option>
               {uniqueValues.timestamp.map((value) => (
@@ -251,14 +255,14 @@ const FormalinTable: React.FC<FormalinTableProps> = ({ formalinList }) => {
             <div
               onClick={() => requestSort('size')}
               style={getHeaderStyle('size')}
-              className='text-xl cursor-pointer'
+              className='text-lg cursor-pointer'
             >
               規格
             </div>
             <select
               value={selectedFilters.size || ''}
               onChange={(e) => handleFilterChange('size', e.target.value)}
-              className="font-normal border border-gray-300 rounded"
+              className="font-normal border border-gray-300 rounded w-full"
             >
               <option value="">すべて</option>
               {uniqueValues.size.map((value) => (
@@ -272,14 +276,14 @@ const FormalinTable: React.FC<FormalinTableProps> = ({ formalinList }) => {
             <div
               onClick={() => requestSort('expired')}
               style={getHeaderStyle('expired')}
-              className='text-xl cursor-pointer'
+              className='text-lg cursor-pointer'
             >
               有効期限
             </div>
             <select
               value={selectedFilters.expired || ''}
               onChange={(e) => handleFilterChange('expired', e.target.value)}
-              className="font-normal border border-gray-300 rounded"
+              className="font-normal border border-gray-300 rounded w-full"
             >
               <option value="">すべて</option>
               {uniqueValues.expired.map((value) => (
@@ -287,6 +291,33 @@ const FormalinTable: React.FC<FormalinTableProps> = ({ formalinList }) => {
               ))}
             </select>
           </th>
+
+          {showLotNumber && (
+            <th className="border border-gray-300 p-2 text-left">
+              <div
+                onClick={() => requestSort('lotNumber')}
+                style={getHeaderStyle('lotNumber')}
+                className='text-lg cursor-pointer'
+              >
+                ロットナンバー
+              </div>
+              <select
+                value={selectedFilters.lotNumber || ''}
+                onChange={(e) => handleFilterChange('lotNumber', e.target.value)}
+                className="font-normal border border-gray-300 rounded w-full"
+              >
+                <option value="">すべて</option>
+                {uniqueValues.lotNumber.map((value) => (
+                  <option key={value} value={value}>{value}</option>
+                ))}
+              </select>
+            </th>
+          )}
+
+          {showHistoryButton && (
+            <th className="border border-gray-300 p-2 text-left">操作</th>
+          )}
+
         </tr>
       </thead>
       <tbody>
@@ -303,7 +334,7 @@ const FormalinTable: React.FC<FormalinTableProps> = ({ formalinList }) => {
               e.currentTarget.style.backgroundColor = '#fff';
             }}
           >
-            <td className="border border-gray-300 p-2">
+            <td className="border border-gray-300 p-2 whitespace-normal break-words">
               {f.key}
             </td>
             <td className="border border-gray-300 p-2">
@@ -321,6 +352,23 @@ const FormalinTable: React.FC<FormalinTableProps> = ({ formalinList }) => {
             <td className="border border-gray-300 p-2">
               {f.expired.toLocaleString()}
             </td>
+            {showLotNumber && (
+              <td className="border border-gray-300 p-2">
+                {f.lotNumber}
+              </td>
+            )}
+            {showHistoryButton && (
+              <td className="border border-gray-300 p-2">
+                {onHistoryClick && (
+                  <button
+                    className="text-blue-500 underline"
+                    onClick={() => onHistoryClick(f.key)}
+                  >
+                    履歴
+                  </button>
+                )}
+              </td>
+            )}
           </tr>
         ))}
       </tbody>
