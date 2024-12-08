@@ -29,7 +29,7 @@ const Ingress: React.FC = () => {
           return;
         }
 
-        const { serialNumber, size, expirationDate } = parsed;
+        const { serialNumber, size, expirationDate, lotNumber } = parsed;
 
         // 既存のホルマリンを検索
         const existingFormalin = formalinList.find((f) => f.key === serialNumber);
@@ -44,6 +44,7 @@ const Ingress: React.FC = () => {
             timestamp: new Date(),
             size: size,
             expired: expirationDate,
+            lotNumber: lotNumber,
           });
           setErrorMessage('');
         }
