@@ -6,5 +6,6 @@ export interface Formalin {
   timestamp: Date; // 最終更新日時
   size: string; // ホルマリンの規格（25ml、40mlなど）
   expired: Date; // 有効期限
+  lotNumber: string;
 }
   
