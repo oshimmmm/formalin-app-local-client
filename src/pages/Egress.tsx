@@ -8,7 +8,7 @@ const Egress: React.FC = () => {
   // useContextを使うことで、FormalinContext内のFormalinListやupdateFormalinStatusにアクセスして、データの取得、表示、更新を行う。
   const { formalinList, updateFormalinStatus } = useContext(FormalinContext);
   const inputRef = useRef<HTMLInputElement>(null);
-  const [selectedPlace, setSelectedPlace] = useState<string>('内視鏡');
+  const [selectedPlace, setSelectedPlace] = useState<string>('');
   const [errorMessage, setErrorMessage] = useState<string>('');
 
   useEffect(() => {
@@ -31,6 +31,13 @@ const Egress: React.FC = () => {
         const parsed = parseFormalinCode(code);
         if (!parsed) {
           setErrorMessage('無効なコードです。');
+          target.value = '';
+          return;
+        }
+
+        // 出庫先が選択されていない場合はエラーメッセージ表示
+        if (selectedPlace === '') {
+          setErrorMessage('出庫先を選択してください。');
           target.value = '';
           return;
         }
@@ -68,6 +75,8 @@ const Egress: React.FC = () => {
         className="text-2xl border border-gray-300 rounded p-2 w-1/5"
         // style={{ fontSize: '1.5em', padding: '10px', width: '20%' }}
       >
+        <option value=""></option>
+        <option value="病理">病理</option>
         <option value="内視鏡">内視鏡</option>
         <option value="外科">外科</option>
         <option value="内科">内科</option>
@@ -81,12 +90,12 @@ const Egress: React.FC = () => {
         ref={inputRef}
         onKeyPress={handleScan}
         placeholder="二次元バーコードを読み込んでください"
-        className="text-2xl border border-gray-300 rounded p-2 w-1/4 ml-10"
+        className="text-2xl border border-gray-300 rounded p-2 w-1/3 ml-10"
         // style={{ fontSize: '1.5em', padding: '10px', width: '30%' }}
       />
 
       {/* エラーメッセージの表示 */}
-      {errorMessage && <p style={{ color: 'red' }}>{errorMessage}</p>}
+      {errorMessage && <p className='text-red-500 ml-10'>{errorMessage}</p>}
 
       <h2 className='text-xl mx-10 mt-8 mb-2'>出庫済みホルマリン一覧</h2>
       <div className='ml-10'>
