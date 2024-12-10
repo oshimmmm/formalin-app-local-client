@@ -2,7 +2,7 @@
 import React, { useState } from 'react';
 import { auth, db } from '../firebase';
 import { signInWithEmailAndPassword } from 'firebase/auth';
-import { collection, query, where, getDocs, doc, getDoc } from 'firebase/firestore';
+import { doc, getDoc } from 'firebase/firestore';
 import { useNavigate } from 'react-router-dom';
 
 const Login: React.FC = () => {
@@ -12,6 +12,7 @@ const Login: React.FC = () => {
   const navigate = useNavigate();
 
   const handleLogin = async (e: React.FormEvent<HTMLFormElement>) => {
+
     e.preventDefault(); // フォームのデフォルトの送信を防止
     try {
        // 1. ユーザー名から UID を取得
