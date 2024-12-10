@@ -1,0 +1,41 @@
+rules_version = '2';
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+    
+    // users コレクション
+    match /users/{userId} {
+      allow read: if true; // 一時的な対策。誰でも読み取れる
+      allow write: if request.auth.uid == userId;
+    }
+
+    // usernames コレクション
+    match /usernames/{username} {
+      // 読み取りは誰でもOK
+      allow read: if true;
+      // 書き込みは認証済みユーザーのみOK
+      allow write: if request.auth.uid != null;
+    }
+
+    // posts コレクション
+    match /posts/{postId} {
+      // 認証済みユーザーなら全員読み込み可
+      allow read: if request.auth.uid != null;
+      // 認証済みユーザーなら全員書き込みも許可
+      // 必要に応じてisAdmin()チェックを外すか、残すか決めてください。
+      // ここでは例としてすべての認証ユーザーに書き込みを許可しています。
+      allow write: if request.auth.uid != null;
+      allow delete: if request.auth.uid != null;
+    }
+
+    // 以下の期限付きルールは削除またはコメントアウトしてください。
+    // これがあると、期限後にアクセスが拒否されます。
+    // match /{document=**} {
+    //   allow read, write: if request.time < timestamp.date(2024, 12, 9);
+    // }
+
+    function isAdmin() {
+      return get(/databases/$(database)/documents/users/$(request.auth.uid)).data.isAdmin == true;
+    }
+  }
+}
