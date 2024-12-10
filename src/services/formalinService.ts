@@ -33,9 +33,15 @@ export const getFormalinData = async (): Promise<Formalin[]> => {
 };
 
 // データの追加
-export const addFormalinData = async (formalin: Omit<Formalin, 'id'>): Promise<void> => {
+export const addFormalinData = async (formalin: Omit<Formalin, 'id'>, initialHistoryEntry?: HistoryEntry): Promise<void> => {
     const formalinCollection = collection(db, 'posts');
-    await addDoc(formalinCollection, formalin);
+    const docRef = await addDoc(formalinCollection, formalin);
+
+    if (initialHistoryEntry) {
+      await updateDoc(docRef, {
+        history: arrayUnion(initialHistoryEntry)
+      });
+    }
 };
 
 // データの更新
