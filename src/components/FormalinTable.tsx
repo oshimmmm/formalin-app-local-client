@@ -190,7 +190,7 @@ const FormalinTable: React.FC<FormalinTableProps> = ({ formalinList, showLotNumb
               style={{ ...getHeaderStyle('place') }}
               className='text-lg cursor-pointer'
             >
-              出庫先
+              場所
             </div>
             <select
               value={selectedFilters.place || ''}
