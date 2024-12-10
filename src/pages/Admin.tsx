@@ -1,12 +1,15 @@
 // src/pages/Admin.tsx
 import React, { useContext, useEffect, useState } from 'react';
 import { db } from '../firebase';
-import { collection, getDocs, doc, updateDoc } from 'firebase/firestore';
+import { collection, getDocs } from 'firebase/firestore';
 import { FormalinContext } from '../context/FormalinContext';
+import { parseFormalinCode } from '../utils/parseFormalinCode';
 
 const Admin: React.FC = () => {
   const { removeFormalin, updateFormalin } = useContext(FormalinContext);
   const [posts, setPosts] = useState<any[]>([]);
+  const [serialNumber, setSerialNumber] = useState<string | null>(null);
+  const [errorMessage, setErrorMessage] = useState<string>('');
   const places = ['病理', '内視鏡', '外科', '内科', '病棟']; // 選択可能な出庫先
 
   useEffect(() => {
@@ -21,6 +24,25 @@ const Admin: React.FC = () => {
 
     fetchPosts();
   }, []);
+
+  const handleBarcodeInput = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (e.key === 'Enter') {
+      const code = (e.target as HTMLInputElement).value.trim();
+      const parsed = parseFormalinCode(code);
+      if (parsed) {
+        setErrorMessage('');
+        setSerialNumber(parsed.serialNumber);
+      } else {
+        setErrorMessage('このホルマリンはリストにありません。');
+        setSerialNumber(null);
+      }
+    }
+  };
+
+  // serialNumberがあればそれにマッチするpost.keyのみ表示
+  const filteredPosts = serialNumber
+    ? posts.filter(post => post.key === serialNumber)
+    : posts;
 
   const handleDelete = async (id: string) => {
     if (window.confirm('本当に削除しますか？')) {
@@ -78,7 +100,16 @@ const Admin: React.FC = () => {
   return (
     <div>
       <h1  className='text-3xl font-bold mt-4 mb-10 ml-10'>管理者専用ページ</h1>
-      <table className="w-4/5 text-lg ml-2.5">
+      <div className='ml-10 mb-4'>
+        <input
+          type="text"
+          placeholder="バーコードを読み込んでください"
+          onKeyPress={handleBarcodeInput}
+          className="border border-gray-300 rounded p-2 w-1/4"
+        />
+        {errorMessage && <p className='text-red-500'>{errorMessage}</p>}
+      </div>
+      <table className="w-4/5 text-lg ml-10">
         <thead>
           <tr>
             <th className="border border-gray-300 p-2.5 text-left">
@@ -97,7 +128,7 @@ const Admin: React.FC = () => {
         </thead>
 
         <tbody>
-          {posts.map((post) => (
+          {filteredPosts.map((post) => (
             <tr 
               key={post.id}
               className="bg-white hover:bg-gray-50"

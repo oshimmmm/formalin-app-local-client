@@ -2,10 +2,33 @@ import React, { useContext, useState } from 'react';
 import { FormalinContext } from '../context/FormalinContext';
 import FormalinTable from '../components/FormalinTable';
 import Modal from '../components/Modal';
+import { parseFormalinCode } from '../utils/parseFormalinCode';
 
 const List: React.FC = () => {
   const { formalinList } = useContext(FormalinContext);
   const [selectedHistoryKey, setSelectedHistoryKey] = useState<string | null>(null);
+  const [searchCode, setSearchCode] = useState('');
+  const [searchSerialNumber, setSearchSerialNumber] = useState<string | null>(null);
+  const [errorMessage, setErrorMessage] = useState<string>('');
+
+  const handleBarcodeInput = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (e.key === 'Enter') {
+      const code = (e.target as HTMLInputElement).value.trim();
+      const parsed = parseFormalinCode(code);
+      if (parsed) {
+        setErrorMessage('');
+        setSearchSerialNumber(parsed.serialNumber);
+      } else {
+        setErrorMessage('このホルマリンはリストにありません。');
+        setSearchSerialNumber(null);
+      }
+    }
+  };
+
+  // searchSerialNumberがセットされていれば、そのkeyに合致するデータのみフィルタリング
+  const filteredList = searchSerialNumber
+    ? formalinList.filter((f) => f.key === searchSerialNumber)
+    : formalinList;
 
   // 履歴ボタンがクリックされた時のハンドラ
   const handleHistoryClick = (key: string) => {
@@ -20,7 +43,17 @@ const List: React.FC = () => {
     <div>
       <h1 className='text-3xl font-bold mt-4 mb-10 ml-10'>詳細一覧ページ</h1>
       <div className='ml-10'>
-      <FormalinTable formalinList={formalinList} showLotNumber={true} showHistoryButton={true} onHistoryClick={handleHistoryClick} />
+      <input
+          type="text"
+          placeholder="バーコードを読み込んでください"
+          value={searchCode}
+          onChange={(e) => setSearchCode(e.target.value)}
+          onKeyPress={handleBarcodeInput}
+          className="border border-gray-300 rounded p-2 mb-2 w-1/4"
+        />
+      {errorMessage && <p className='text-red-500'>{errorMessage}</p>}
+
+      <FormalinTable formalinList={filteredList} showLotNumber={true} showHistoryButton={true} onHistoryClick={handleHistoryClick} />
       </div>
       {/* モーダルやポップアップで履歴表示 */}
       {selectedHistoryKey && (
