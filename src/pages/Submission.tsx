@@ -80,12 +80,12 @@ const Submission: React.FC = () => {
         ref={inputRef}
         onKeyPress={handleScan}
         placeholder="二次元バーコードを読み込んでください"
-        className="text-2xl border border-gray-300 rounded p-2 w-1/4 ml-10"
+        className="text-2xl border border-gray-300 rounded p-2 w-1/3 ml-10"
         // style={{ fontSize: '1.5em', padding: '10px', width: '30%' }}
       />
 
       {/* エラーメッセージの表示 */}
-      {errorMessage && <p style={{ color: 'red' }}>{errorMessage}</p>}
+      {errorMessage && <p className='text-red-500 ml-10'>{errorMessage}</p>}
 
       
       <div ref={containerRef} style={{ display: 'flex', justifyContent: 'space-between', width: '100%', transform: shouldScale ? 'scale(0.9)' : 'none', transformOrigin: 'top left' }}>
