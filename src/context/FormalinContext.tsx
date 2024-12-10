@@ -7,6 +7,7 @@ import {
 } from '../services/formalinService';
 import { deleteDoc, doc } from 'firebase/firestore';
 import { auth, db } from '../firebase';
+import { useAuthState } from 'react-firebase-hooks/auth';
 
 interface FormalinContextProps {
   formalinList: Formalin[];
@@ -33,27 +34,43 @@ interface FormalinProviderProps {
 // ホルマリンリストの状態管理用のコンポーネント
 export const FormalinProvider: React.FC<FormalinProviderProps> = ({ children }) => {
   const [formalinList, setFormalinList] = useState<Formalin[]>([]);
+  const [user, loading] = useAuthState(auth); // ログイン状態を取得
 
   // Firestoreからデータを取得
   useEffect(() => {
-    const fetchData = async () => {
-      try {
-        const data = await getFormalinData();
-        setFormalinList(data);
-      } catch (error) {
-        console.error('データの取得中にエラーが発生しました:', error);
-      }
-    };
-    fetchData();
-  }, []);
+    // userが存在し、loadingがfalseのときにデータ取得を行う
+    if (!loading && user) {
+      const fetchData = async () => {
+        try {
+          const data = await getFormalinData();
+          setFormalinList(data);
+        } catch (error) {
+          console.error('データの取得中にエラーが発生しました:', error);
+        }
+      };
+      fetchData();
+    }
+  }, [user, loading]);
 
   // addFormalin関数を定義
   const addFormalin = async (formalin: Omit<Formalin, 'id'>) => {
     try {
-      await addFormalinData(formalin);
-      // データを再取得
-      const data = await getFormalinData();
-      setFormalinList(data);
+      const user = auth.currentUser;
+    const updatedBy = user ? user.email || user.uid : 'unknown';
+
+    const historyEntry = {
+      updatedBy,
+      updatedAt: new Date(),
+      oldStatus: '',
+      newStatus: formalin.status, // 入庫時点のstatus
+      oldPlace: '',
+      newPlace: formalin.place   // 入庫時点のplace
+    };
+
+    await addFormalinData(formalin, historyEntry);
+
+    const data = await getFormalinData();
+    setFormalinList(data);
     } catch (error) {
       console.error('データの追加中にエラーが発生しました:', error);
     }
