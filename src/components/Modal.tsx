@@ -22,6 +22,8 @@ const Modal: React.FC<{ onClose: () => void; children: React.ReactNode }> = ({ o
             borderRadius: '10px',
             maxWidth: '500px',
             width: '90%',
+            maxHeight: '80vh',      // 表示領域の最大高さを指定（画面高さの80%）
+            overflowY: 'auto',      // 縦方向スクロールを有効化
           }}
           onClick={(e) => e.stopPropagation()} // 内部クリックで閉じないようにする
         >
