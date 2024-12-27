@@ -15,10 +15,12 @@ const FormalinTable: React.FC<FormalinTableProps> = ({ formalinList, showLotNumb
   
   // ソート設定の状態管理
   // sortConfig:テーブルでどの列を基準にして、どの順序（昇順か降順か）でデータを並べるかを保持する。
+  type SortableKey = 'key' | 'place' | 'status' | 'timestamp' | 'expired' | 'size' | 'lotNumber';
+  
   const [sortConfig, setSortConfig] = useState<{
-    key: keyof Formalin; // ソートする列の名前。Folmarlin型のキー（key, place, status, timestampのどれか）
-    direction: 'asc' | 'desc'; // ソートの方向（昇順または降順）
-  } | null>(null); //初期値はnull（ソート無し）
+    key: SortableKey;
+    direction: 'asc' | 'desc';
+  } | null>(null);
 
   // フィルタ設定の状態管理
   // selectedFilters:テーブルで適用するフィルタ条件を保持
@@ -131,7 +133,7 @@ const FormalinTable: React.FC<FormalinTableProps> = ({ formalinList, showLotNumb
   // key（ソート対象となる列の名前）を引数として受け取る
   // keyはFormalin型のプロパティ(key, place, status, timestamp)のどれか
   // この関数はソート条件を変更して、状態(sortConfig)を更新する
-  const requestSort = (key: keyof Formalin) => {
+  const requestSort = (key: SortableKey) => {
     // sortConfigの初期状態として、ソート方向（direction）を昇順（asc）に設定
     let direction: 'asc' | 'desc' = 'asc';
     // ソート設定(sortConfig)が存在している（null ではない）場合は、、、

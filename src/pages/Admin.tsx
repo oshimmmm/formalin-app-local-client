@@ -1,30 +1,29 @@
 // src/pages/Admin.tsx
 import React, { useContext, useEffect, useState } from 'react';
-import { db } from '../firebase';
-import { collection, getDocs } from 'firebase/firestore';
 import { FormalinContext } from '../context/FormalinContext';
 import { parseFormalinCode } from '../utils/parseFormalinCode';
+import { Formalin } from '../types/Formalin';
 
 const Admin: React.FC = () => {
-  const { removeFormalin, updateFormalin } = useContext(FormalinContext);
-  const [posts, setPosts] = useState<any[]>([]);
+  // PostgreSQL用に書き換え済みの context から取得
+  const { formalinList, removeFormalin, updateFormalin } = useContext(FormalinContext);
+
+  // ローカル state に posts を持ち、状況に応じて編集。
+  // ※ 直接 formalinList を使ってもOKですが、「編集途中の値を持つために」あえてローカルを使う例。
+  const [posts, setPosts] = useState<Formalin[]>([]);
+
   const [serialNumber, setSerialNumber] = useState<string | null>(null);
   const [errorMessage, setErrorMessage] = useState<string>('');
-  const places = ['病理', '内視鏡', '外科', '内科', '病棟']; // 選択可能な出庫先
 
+  // 選択可能な出庫先（場所）
+  const places = ['病理', '内視鏡', '外科', '内科', '病棟'];
+
+  // ============ 1) ContextのformalnListをローカルpostsに反映 ============
   useEffect(() => {
-    const fetchPosts = async () => {
-      const querySnapshot = await getDocs(collection(db, 'posts'));
-      const postsData = querySnapshot.docs.map((doc) => ({
-        id: doc.id,
-        ...doc.data(),
-      }));
-      setPosts(postsData);
-    };
+    setPosts(formalinList);
+  }, [formalinList]);
 
-    fetchPosts();
-  }, []);
-
+  // ============ 2) バーコード読取 → シリアル番号を state に保持 ============
   const handleBarcodeInput = (e: React.KeyboardEvent<HTMLInputElement>) => {
     if (e.key === 'Enter') {
       const code = (e.target as HTMLInputElement).value.trim();
@@ -39,97 +38,84 @@ const Admin: React.FC = () => {
     }
   };
 
-  // serialNumberがあればそれにマッチするpost.keyのみ表示
+  // ============ 3) serialNumber があれば、それにマッチする key だけ表示 ============
   const filteredPosts = serialNumber
-    ? posts.filter(post => post.key === serialNumber)
+    ? posts.filter((post) => post.key === serialNumber)
     : posts;
 
-  const handleDelete = async (id: string) => {
+  // ============ 4) 削除ボタン → removeFormalin 呼び出し → 再同期 ============
+  const handleDelete = async (id: number) => {
     if (window.confirm('本当に削除しますか？')) {
-        // removeFormalinを呼び出すと、Context内で削除＆再取得が行われる
-        await removeFormalin(id);
-        // postsはAdmin用のローカル状態だが、最新の状態を取得し直すか、またはposts自体の管理をやめContextと揃える
-        const querySnapshot = await getDocs(collection(db, 'posts'));
-        const updatedPosts = querySnapshot.docs.map((doc) => ({
-          id: doc.id,
-          ...doc.data(),
-        }));
-      setPosts(updatedPosts);
+      await removeFormalin(id);
+      // removeFormalin後、Context側がDB再取得し formalinList が更新されれば useEffectにより自動再同期
+      // ここで手動同期するなら: setPosts(formalinList);
     }
   };
 
-  // place変更時
-  const handlePlaceChange = (id: string, newPlace: string) => {
+  // ============ 5) Place変更 (ローカルstateを更新) ============
+  const handlePlaceChange = (id: number, newPlace: string) => {
     setPosts((prev) =>
-      prev.map((post) => (post.id === id ? { ...post, place: newPlace } : post))
+      prev.map((post) =>
+        post.id === id ? { ...post, place: newPlace } : post
+      )
     );
   };
 
-  // status変更時
-  const handleStatusChange = (id: string, newStatus: string) => {
+  // ============ 6) Status変更 (ローカルstateを更新) ============
+  const handleStatusChange = (id: number, newStatus: string) => {
     setPosts((prev) =>
-      prev.map((post) => (post.id === id ? { ...post, status: newStatus } : post))
+      prev.map((post) =>
+        post.id === id ? { ...post, status: newStatus } : post
+      )
     );
   };
 
-  // 「更新」ボタンを押した時にFirestoreへ反映
-  const handleUpdateData = async (id: string) => {
+  // ============ 7) 「更新」ボタンでDB更新 → 再同期 ============
+  const handleUpdateData = async (id: number) => {
     const targetPost = posts.find((p) => p.id === id);
     if (!targetPost) return;
 
-    // 削除と同様、更新時にも確認ダイアログを表示
     if (!window.confirm('本当に更新しますか？')) {
       return;
     }
 
-    // Context内で更新処理を実行し、Dataを再取得
+    // ここで Context の updateFormalin を呼び、DB更新
     await updateFormalin(id, {
       place: targetPost.place,
       status: targetPost.status,
     });
 
-    // firestore上で更新後の最新データを取得
-    const querySnapshot = await getDocs(collection(db, 'posts'));
-    const updatedPosts = querySnapshot.docs.map((doc) => ({
-      id: doc.id,
-      ...doc.data(),
-    }));
-    setPosts(updatedPosts);
+    // Context が DB を再取得して formalinList を更新 → useEffect => setPosts(formalinList)
+    // もしすぐにローカル画面を最新化したいなら、手動で setPosts(formalinList) も可
   };
 
   return (
     <div>
-      <h1  className='text-3xl font-bold mt-4 mb-10 ml-10'>管理者専用ページ</h1>
-      <div className='ml-10 mb-4'>
+      <h1 className="text-3xl font-bold mt-4 mb-10 ml-10">管理者専用ページ</h1>
+
+      <div className="ml-10 mb-4">
         <input
           type="text"
           placeholder="バーコードを読み込んでください"
           onKeyPress={handleBarcodeInput}
           className="border border-gray-300 rounded p-2 w-1/4"
         />
-        {errorMessage && <p className='text-red-500'>{errorMessage}</p>}
+        {errorMessage && <p className="text-red-500">{errorMessage}</p>}
       </div>
+
       <table className="w-4/5 text-lg ml-10">
         <thead>
           <tr>
-            <th className="border border-gray-300 p-2.5 text-left">
-              ID
-            </th>
-            <th className="border border-gray-300 p-2.5 text-left">
-              Place
-            </th>
-            <th className="border border-gray-300 p-2.5 text-left">
-              Status
-            </th>
-            <th className="border border-gray-300 p-2.5 text-left">
-              操作
-            </th>
+            <th className="border border-gray-300 p-2.5 text-left">ID</th>
+            <th className="border border-gray-300 p-2.5 text-left">Place</th>
+            <th className="border border-gray-300 p-2.5 text-left">Status</th>
+            <th className="border border-gray-300 p-2.5 text-left">操作</th>
           </tr>
         </thead>
 
         <tbody>
           {filteredPosts.map((post) => (
-            <tr 
+            <tr
               key={post.id}
               className="bg-white hover:bg-gray-50"
               onMouseEnter={(e) => {
@@ -140,21 +126,21 @@ const Admin: React.FC = () => {
               }}
             >
               <td className="border border-gray-300 p-2.5">
-                {post.key}
+                {post.key /* PostgreSQLの"SERIAL ID"とは別に、試薬IDとしてのkey */}
               </td>
 
               <td className="border border-gray-300 p-2.5">
-                  <select
-                    value={post.place}
-                    onChange={(e) => handlePlaceChange(post.id, e.target.value)}
-                    className="w-full p-1 border border-gray-300 rounded"
-                  >
-                    {places.map((p) => (
-                      <option key={p} value={p}>
-                        {p}
-                      </option>
-                    ))}
-                  </select>
+                <select
+                  value={post.place}
+                  onChange={(e) => handlePlaceChange(post.id, e.target.value)}
+                  className="w-full p-1 border border-gray-300 rounded"
+                >
+                  {places.map((p) => (
+                    <option key={p} value={p}>
+                      {p}
+                    </option>
+                  ))}
+                </select>
               </td>
 
               <td className="border border-gray-300 p-2.5">
@@ -162,9 +148,7 @@ const Admin: React.FC = () => {
                   type="text"
                   value={post.status}
                   className="w-full p-1 border border-gray-300 rounded"
-                  onChange={(e) =>
-                    handleStatusChange(post.id, e.target.value)
-                  }
+                  onChange={(e) => handleStatusChange(post.id, e.target.value)}
                 />
               </td>
               <td className="border border-gray-300 p-2.5">

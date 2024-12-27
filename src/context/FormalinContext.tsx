@@ -1,23 +1,21 @@
+// contexts/FormalinContext.tsx
 import React, { createContext, useState, useEffect, ReactNode } from 'react';
 import { Formalin } from '../types/Formalin';
 import {
   getFormalinData,
   addFormalinData,
   updateFormalinData,
+  deleteFormalinData,
 } from '../services/formalinService';
-import { deleteDoc, doc } from 'firebase/firestore';
-import { auth, db } from '../firebase';
-import { useAuthState } from 'react-firebase-hooks/auth';
 
 interface FormalinContextProps {
   formalinList: Formalin[];
-  addFormalin: (formalin: Omit<Formalin, 'id'>) => Promise<void>;
-  updateFormalinStatus: (id: string, data: Partial<Formalin>) => Promise<void>;
-  removeFormalin: (id: string) => Promise<void>;
-  updateFormalin: (id: string, data: Partial<Formalin>) => Promise<void>;
+  addFormalin: (formalin: Omit<Formalin, 'id' | 'history'>) => Promise<void>;
+  updateFormalinStatus: (id: number, data: Partial<Formalin>) => Promise<void>;
+  removeFormalin: (id: number) => Promise<void>;
+  updateFormalin: (id: number, data: Partial<Formalin>) => Promise<void>;
 }
 
-// 
 export const FormalinContext = createContext<FormalinContextProps>({
   formalinList: [],
   addFormalin: async () => {},
@@ -26,80 +24,66 @@ export const FormalinContext = createContext<FormalinContextProps>({
   updateFormalin: async () => {},
 });
 
-
 interface FormalinProviderProps {
   children: ReactNode;
 }
 
-// ホルマリンリストの状態管理用のコンポーネント
 export const FormalinProvider: React.FC<FormalinProviderProps> = ({ children }) => {
   const [formalinList, setFormalinList] = useState<Formalin[]>([]);
-  const [user, loading] = useAuthState(auth); // ログイン状態を取得
 
-  // Firestoreからデータを取得
+  // 初回マウント時に一覧を取得
   useEffect(() => {
-    // userが存在し、loadingがfalseのときにデータ取得を行う
-    if (!loading && user) {
-      const fetchData = async () => {
-        try {
-          const data = await getFormalinData();
-          setFormalinList(data);
-        } catch (error) {
-          console.error('データの取得中にエラーが発生しました:', error);
-        }
-      };
-      fetchData();
-    }
-  }, [user, loading]);
-
-  // addFormalin関数を定義
-  const addFormalin = async (formalin: Omit<Formalin, 'id'>) => {
-    try {
-      const user = auth.currentUser;
-    const updatedBy = user ? user.email || user.uid : 'unknown';
-
-    const historyEntry = {
-      updatedBy,
-      updatedAt: new Date(),
-      oldStatus: '',
-      newStatus: formalin.status, // 入庫時点のstatus
-      oldPlace: '',
-      newPlace: formalin.place   // 入庫時点のplace
+    const fetchData = async () => {
+      try {
+        const data = await getFormalinData();
+        setFormalinList(data);
+      } catch (error) {
+        console.error('データの取得中にエラーが発生しました:', error);
+      }
     };
+    fetchData();
+  }, []);
 
-    await addFormalinData(formalin, historyEntry);
+  // addFormalin
+  const addFormalin = async (formalin: Omit<Formalin, 'id' | 'history'>) => {
+    try {
+      // ここでは仮で updatedBy='anonymous' とするなど
+      const historyEntry = {
+        updatedBy: 'anonymous',
+        updatedAt: new Date(),
+        oldStatus: '',
+        newStatus: formalin.status,
+        oldPlace: '',
+        newPlace: formalin.place,
+      };
+      await addFormalinData(formalin, historyEntry);
 
-    const data = await getFormalinData();
-    setFormalinList(data);
+      // 追加後に再取得
+      const data = await getFormalinData();
+      setFormalinList(data);
     } catch (error) {
       console.error('データの追加中にエラーが発生しました:', error);
     }
   };
 
-  // updateFormalinStatus関数を定義
-  const updateFormalinStatus = async (id: string, data: Partial<Formalin>) => {
+  // updateFormalinStatus
+  const updateFormalinStatus = async (id: number, data: Partial<Formalin>) => {
     try {
       const oldData = formalinList.find((f) => f.id === id);
-      const user = auth.currentUser;
-      const updatedBy = user ? user.email || user.uid : 'unknown';
-
-      // undefined対策: ?? ''でundefinedの場合空文字を代入
-      const oldStatus = oldData?.status ?? '';
-      const newStatus = data.status ?? '';
-      const oldPlace = oldData?.place ?? '';
-      const newPlace = data.place ?? '';
+      if (!oldData) return;
 
       const historyEntry = {
-        updatedBy,
+        updatedBy: 'anonymous',
         updatedAt: new Date(),
-        oldStatus,
-        newStatus,
-        oldPlace,
-        newPlace
+        oldStatus: oldData.status,
+        newStatus: data.status || '',
+        oldPlace: oldData.place,
+        newPlace: data.place || '',
       };
 
       await updateFormalinData(id, data, historyEntry);
-      // データを再取得
+
+      // 更新後に再取得
       const updatedData = await getFormalinData();
       setFormalinList(updatedData);
     } catch (error) {
@@ -107,13 +91,10 @@ export const FormalinProvider: React.FC<FormalinProviderProps> = ({ children }) 
     }
   };
 
-  const removeFormalin = async (id: string) => {
+  // removeFormalin
+  const removeFormalin = async (id: number) => {
     try {
-      // Firestore上から削除する処理をformalinServiceなどに定義するか、直接ここで実行
-      const formalinDoc = doc(db, 'posts', id);
-      await deleteDoc(formalinDoc);
-
-      // 削除後にデータを再取得
+      await deleteFormalinData(id);
       const updatedData = await getFormalinData();
       setFormalinList(updatedData);
     } catch (error) {
@@ -121,25 +102,19 @@ export const FormalinProvider: React.FC<FormalinProviderProps> = ({ children }) 
     }
   };
 
-  const updateFormalin = async (id: string, data: Partial<Formalin>) => {
+  // updateFormalin (任意のフィールド更新)
+  const updateFormalin = async (id: number, data: Partial<Formalin>) => {
     try {
       const oldData = formalinList.find((f) => f.id === id);
-      const user = auth.currentUser;
-      const updatedBy = user ? user.email || user.uid : 'unknown';
-
-      // undefined対策: ?? ''でundefinedの場合空文字を代入
-      const oldStatus = oldData?.status ?? '';
-      const newStatus = data.status ?? '';
-      const oldPlace = oldData?.place ?? '';
-      const newPlace = data.place ?? '';
+      if (!oldData) return;
 
       const historyEntry = {
-        updatedBy,
+        updatedBy: 'anonymous',
         updatedAt: new Date(),
-        oldStatus,
-        newStatus,
-        oldPlace,
-        newPlace
+        oldStatus: oldData.status,
+        newStatus: data.status || '',
+        oldPlace: oldData.place,
+        newPlace: data.place || '',
       };
 
       await updateFormalinData(id, data, historyEntry);
@@ -151,8 +126,15 @@ export const FormalinProvider: React.FC<FormalinProviderProps> = ({ children }) 
   };
 
   return (
-    // ラッピングされた子コンポーネントは、コンテキストのデータと関数にアクセスできる
-    <FormalinContext.Provider value={{ formalinList, addFormalin, updateFormalinStatus, removeFormalin, updateFormalin }}>
+    <FormalinContext.Provider
+      value={{
+        formalinList,
+        addFormalin,
+        updateFormalinStatus,
+        removeFormalin,
+        updateFormalin,
+      }}
+    >
       {children}
     </FormalinContext.Provider>
   );

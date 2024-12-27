@@ -64,7 +64,7 @@ const List: React.FC = () => {
               {history.map((h: any, index: number) => (
                 <li key={index}>
                   <div>更新者: {h.updatedBy}</div>
-                  <div>更新日時: {h.updatedAt ? h.updatedAt.toDate().toLocaleString() : '不明'}</div>
+                  <div>更新日時: {h.updatedAt ? new Date(h.updatedAt).toLocaleString() : '不明'}</div>
                   <div>旧ステータス: {h.oldStatus}</div>
                   <div>新ステータス: {h.newStatus}</div>
                   <div>旧場所: {h.oldPlace}</div>

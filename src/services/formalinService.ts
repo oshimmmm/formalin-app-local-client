@@ -1,58 +1,77 @@
-import { addDoc, arrayUnion, collection, doc, getDocs, updateDoc } from 'firebase/firestore';
-import { Formalin } from '../types/Formalin';
-import { db } from '../firebase';
+// services/formalinService.ts
+import axios from 'axios';
+import { Formalin, HistoryEntry } from '../types/Formalin';
 
-interface HistoryEntry {
-  updatedBy: string;
-  updatedAt: Date;
-  oldStatus?: string;
-  newStatus?: string;
-  oldPlace?: string;
-  newPlace?: string;
-}
+const API_BASE_URL = 'http://localhost:3001/api';
 
-// データの取得
 export const getFormalinData = async (): Promise<Formalin[]> => {
-  const formalinCollection = collection(db, 'posts');
-  const formalinSnapshot = await getDocs(formalinCollection);
-  const formalinList = formalinSnapshot.docs.map((doc) => {
-    const data = doc.data();
+  // サーバーのエンドポイント /api/formalin に GET
+  const response = await axios.get(`${API_BASE_URL}/formalin`);
+
+  // response.data はサーバーの rows[] 。
+  // サーバーからは timestamp, expired, history.updatedAt が文字列で返るので、Dateに変換。
+  const list = response.data.map((item: any) => {
     return {
-      id: doc.id,
-      key: data.key,
-      place: data.place,
-      status: data.status,
-      timestamp: data.timestamp.toDate(),
-      size: data.size || '不明',
-      expired: data.expired ? data.expired.toDate() : new Date(),
-      lotNumber: data.lotNumber || '',
-      history: data.history || []
-    } as Formalin & { history?: HistoryEntry[] };
+      ...item,
+      timestamp: item.timestamp ? new Date(item.timestamp) : new Date(),
+      expired: item.expired ? new Date(item.expired) : new Date(),
+      history: item.history.map((h: any) => ({
+        ...h,
+        updatedAt: h.updatedAt ? new Date(h.updatedAt) : new Date(),
+      })),
+    } as Formalin;
   });
-  return formalinList;
+  return list;
 };
 
-// データの追加
-export const addFormalinData = async (formalin: Omit<Formalin, 'id'>, initialHistoryEntry?: HistoryEntry): Promise<void> => {
-    const formalinCollection = collection(db, 'posts');
-    const docRef = await addDoc(formalinCollection, formalin);
+export const addFormalinData = async (
+  formalin: Omit<Formalin, 'id' | 'history'>,
+  initialHistoryEntry?: Omit<HistoryEntry, 'history_id'>
+): Promise<void> => {
+  // サーバーに渡すリクエストボディ
+  // initialHistoryEntry があれば、サーバー側で履歴INSERTしてもらう
+  const body = {
+    key: formalin.key,
+    place: formalin.place,
+    status: formalin.status,
+    timestamp: formalin.timestamp,
+    size: formalin.size,
+    expired: formalin.expired,
+    lotNumber: formalin.lotNumber,
+    updatedBy: initialHistoryEntry?.updatedBy || undefined,
+    oldStatus: initialHistoryEntry?.oldStatus || undefined,
+    newStatus: initialHistoryEntry?.newStatus || undefined,
+    oldPlace: initialHistoryEntry?.oldPlace || undefined,
+    newPlace: initialHistoryEntry?.newPlace || undefined,
+  };
 
-    if (initialHistoryEntry) {
-      await updateDoc(docRef, {
-        history: arrayUnion(initialHistoryEntry)
-      });
-    }
+  await axios.post(`${API_BASE_URL}/formalin`, body);
 };
 
-// データの更新
-export const updateFormalinData = async (id: string, data: Partial<Formalin>, historyEntry?: HistoryEntry): Promise<void> => {
-  const formalinDoc = doc(db, 'posts', id);
+export const updateFormalinData = async (
+  id: number,
+  data: Partial<Formalin>,
+  historyEntry?: Omit<HistoryEntry, 'history_id'>
+): Promise<void> => {
+  const body = {
+    // 更新したいフィールドのみ送る
+    key: data.key,
+    place: data.place,
+    status: data.status,
+    timestamp: data.timestamp,
+    size: data.size,
+    expired: data.expired,
+    lotNumber: data.lotNumber,
+    // 履歴用
+    updatedBy: historyEntry?.updatedBy,
+    oldStatus: historyEntry?.oldStatus,
+    newStatus: historyEntry?.newStatus,
+    oldPlace: historyEntry?.oldPlace,
+    newPlace: historyEntry?.newPlace,
+  };
+  await axios.put(`${API_BASE_URL}/formalin/${id}`, body);
+};
 
-  const updateData: any = { ...data };
-  if (historyEntry) {
-    // arrayUnionを使ってhistory配列に新たな更新ログを追加
-    updateData.history = arrayUnion(historyEntry);
-  }
-
-  await updateDoc(formalinDoc, updateData);
+export const deleteFormalinData = async (id: number): Promise<void> => {
+  await axios.delete(`${API_BASE_URL}/formalin/${id}`);
 };
