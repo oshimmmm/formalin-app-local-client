@@ -63,6 +63,7 @@ const FormalinTable: React.FC<FormalinTableProps> = ({ formalinList, showLotNumb
     expired: Array.from(new Set(formalinList.map((item) => item.expired.toLocaleString()))),
     lotNumber: Array.from(new Set(formalinList.map((item) => item.lotNumber)))
   };
+  // console.log("uniqueValues is: ", uniqueValues);
 
   // 選択されたフィルタ条件に一致する項目だけを含む配列
   const filteredFormalinList = formalinList.filter((item) => {
@@ -317,7 +318,7 @@ const FormalinTable: React.FC<FormalinTableProps> = ({ formalinList, showLotNumb
           )}
 
           {showHistoryButton && (
-            <th className="border border-gray-300 p-2 text-left">操作</th>
+            <th className="border border-gray-300 p-2 text-left">更新履歴</th>
           )}
 
         </tr>
