@@ -1,6 +1,6 @@
 // contexts/FormalinContext.tsx
 import React, { createContext, useState, useEffect, ReactNode } from 'react';
-import { Formalin } from '../types/Formalin';
+import { Formalin, NewFormalin } from '../types/Formalin';
 import {
   getFormalinData,
   addFormalinData,
@@ -10,10 +10,10 @@ import {
 
 interface FormalinContextProps {
   formalinList: Formalin[];
-  addFormalin: (formalin: Omit<Formalin, 'id' | 'history'>) => Promise<void>;
-  updateFormalinStatus: (id: number, data: Partial<Formalin>) => Promise<void>;
+  addFormalin: (formalin: NewFormalin, updatedBy?: string) => Promise<void>;
+  updateFormalinStatus: (id: number, data: Partial<Formalin>, updatedBy?: string) => Promise<void>;
   removeFormalin: (id: number) => Promise<void>;
-  updateFormalin: (id: number, data: Partial<Formalin>) => Promise<void>;
+  updateFormalin: (id: number, data: Partial<Formalin>, updatedBy?: string) => Promise<void>;
 }
 
 export const FormalinContext = createContext<FormalinContextProps>({
@@ -36,6 +36,7 @@ export const FormalinProvider: React.FC<FormalinProviderProps> = ({ children }) 
     const fetchData = async () => {
       try {
         const data = await getFormalinData();
+        // console.log("data is: ", data);
         setFormalinList(data);
       } catch (error) {
         console.error('データの取得中にエラーが発生しました:', error);
@@ -45,11 +46,10 @@ export const FormalinProvider: React.FC<FormalinProviderProps> = ({ children }) 
   }, []);
 
   // addFormalin
-  const addFormalin = async (formalin: Omit<Formalin, 'id' | 'history'>) => {
+  const addFormalin = async (formalin: NewFormalin, updatedBy?: string) => {
     try {
-      // ここでは仮で updatedBy='anonymous' とするなど
       const historyEntry = {
-        updatedBy: 'anonymous',
+        updatedBy: updatedBy || 'anonymous',
         updatedAt: new Date(),
         oldStatus: '',
         newStatus: formalin.status,
@@ -67,13 +67,13 @@ export const FormalinProvider: React.FC<FormalinProviderProps> = ({ children }) 
   };
 
   // updateFormalinStatus
-  const updateFormalinStatus = async (id: number, data: Partial<Formalin>) => {
+  const updateFormalinStatus = async (id: number, data: Partial<Formalin>, updatedBy?: string) => {
     try {
       const oldData = formalinList.find((f) => f.id === id);
       if (!oldData) return;
 
       const historyEntry = {
-        updatedBy: 'anonymous',
+        updatedBy: updatedBy || 'anonymous',
         updatedAt: new Date(),
         oldStatus: oldData.status,
         newStatus: data.status || '',
@@ -103,13 +103,13 @@ export const FormalinProvider: React.FC<FormalinProviderProps> = ({ children }) 
   };
 
   // updateFormalin (任意のフィールド更新)
-  const updateFormalin = async (id: number, data: Partial<Formalin>) => {
+  const updateFormalin = async (id: number, data: Partial<Formalin>, updatedBy?: string) => {
     try {
       const oldData = formalinList.find((f) => f.id === id);
       if (!oldData) return;
 
       const historyEntry = {
-        updatedBy: 'anonymous',
+        updatedBy: updatedBy || 'anonymous',
         updatedAt: new Date(),
         oldStatus: oldData.status,
         newStatus: data.status || '',
