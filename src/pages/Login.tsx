@@ -1,48 +1,41 @@
 // pages/Login.tsx
 import React, { useState } from 'react';
-import { auth, db } from '../firebase';
-import { signInWithEmailAndPassword } from 'firebase/auth';
-import { doc, getDoc } from 'firebase/firestore';
 import { useNavigate } from 'react-router-dom';
+import { useUserContext } from '../context/UserContext';
+import axios from 'axios';
 
 const Login: React.FC = () => {
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
   const navigate = useNavigate();
+  const { setUser } = useUserContext(); 
 
   const handleLogin = async (e: React.FormEvent<HTMLFormElement>) => {
 
     e.preventDefault(); // フォームのデフォルトの送信を防止
     try {
-       // 1. ユーザー名から UID を取得
-       const usernameDocRef = doc(db, 'usernames', username);
-       const usernameDoc    = await getDoc(usernameDocRef);
+      // POST /api/login に { username, password } を送る
+      const response = await axios.post('http://localhost:3001/api/login', {
+        username,
+        password,
+      });
 
-      if (!usernameDoc.exists()) {
-        setError('ユーザー名またはパスワードが正しくありません。');
-        return;
+      const data = response.data;
+      if (data.success) {
+        // ログイン成功 => Contextに user を格納
+       setUser({
+         username: data.username,
+         isAdmin: data.isAdmin,
+       });
+        setError('');
+        navigate('/');
+      } else {
+        setError(data.message || 'ログインに失敗しました。');
       }
-
-      const uid = usernameDoc.data()?.uid;
-
-      // 2. UID からメールアドレスを取得
-      const userDocRef = doc(db, 'users', uid);
-      const userDoc    = await getDoc(userDocRef);
-
-      const email = userDoc.data()?.email;
-
-      if (!email) {
-        setError('ユーザー情報の取得に失敗しました。');
-        return;
-      }
-
-      // 3. ログイン処理
-      await signInWithEmailAndPassword(auth, email, password);
-      navigate('/');
     } catch (err) {
-      setError('ログインに失敗しました。');
       console.error('ログインエラー:', err);
+      setError('ログインに失敗しました。');
     }
   };
 

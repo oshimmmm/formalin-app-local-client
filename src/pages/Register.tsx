@@ -1,48 +1,32 @@
 // src/pages/Register.tsx
 import React, { useState } from 'react';
-import { auth, db } from '../firebase';
-import { createUserWithEmailAndPassword } from 'firebase/auth';
-import { doc, setDoc, collection, query, where, getDocs } from 'firebase/firestore';
 import { useNavigate } from 'react-router-dom';
+import axios from 'axios';
 
 const Register: React.FC = () => {
   const [username, setUsername] = useState('');
-  const [email, setEmail]       = useState('');
+  const [isAdmin, setIsAdmin]   = useState(false);
   const [password, setPassword] = useState('');
   const [error, setError]       = useState('');
   const navigate                = useNavigate();
 
   const handleRegister = async () => {
     try {
-      // 1. ユーザー名の重複チェック
-      const usernamesRef = collection(db, 'usernames');
-      const q = query(usernamesRef, where('__name__', '==', username));
-      const querySnapshot = await getDocs(q);
+      // /api/register に { username, password, isAdmin } を送信
+      const response = await axios.post('http://localhost:3001/api/register', {
+        username,
+        password,
+        isAdmin,
+      });
 
-      if (!querySnapshot.empty) {
-        setError('このユーザー名は既に使用されています。');
-        return;
+      const data = response.data;
+      if (!data.success) {
+        // 重複などのエラーメッセージ
+        setError(data.message || '登録に失敗しました。');
+      } else {
+        // 登録成功後にリダイレクト
+        navigate('/');
       }
-
-      // 2. ユーザーの作成
-      const userCredential = await createUserWithEmailAndPassword(auth, email, password);
-      const uid = userCredential.user.uid;
-
-      // 3. ユーザー情報の保存
-      // users コレクションにユーザー情報を保存
-      await setDoc(doc(db, 'users', uid), {
-        username: username,
-        email: email,
-        isAdmin: false, // 管理者であれば true、一般ユーザーは false または省略
-      });
-
-      // usernames コレクションにユーザー名とUIDを保存
-      await setDoc(doc(db, 'usernames', username), {
-        uid: uid,
-      });
-
-      // 登録後にホームページへリダイレクト
-      navigate('/');
     } catch (err) {
       setError('登録に失敗しました。');
       console.error('登録エラー:', err);
@@ -61,13 +45,7 @@ const Register: React.FC = () => {
         onChange={(e) => setUsername(e.target.value)}
         className="w-full p-2 border border-gray-300 rounded mb-4"
       />
-      <input
-        type="email"
-        placeholder="メールアドレス"
-        value={email}
-        onChange={(e) => setEmail(e.target.value)}
-        className="w-full p-2 border border-gray-300 rounded mb-4"
-      />
+
       <input
         type="password"
         placeholder="パスワード"
@@ -75,6 +53,16 @@ const Register: React.FC = () => {
         onChange={(e) => setPassword(e.target.value)}
         className="w-full p-2 border border-gray-300 rounded mb-4"
       />
+
+      <label className="block mb-2">ユーザー種別</label>
+        <select
+          value={isAdmin ? 'true' : 'false'}
+          onChange={(e) => setIsAdmin(e.target.value === 'true')}
+          className="w-full p-2 border border-gray-300 rounded mb-4"
+        >
+          <option value="false">一般ユーザー</option>
+          <option value="true">管理者</option>
+        </select>
       <button onClick={handleRegister} className="w-full bg-blue-500 text-white p-2 rounded hover:bg-blue-600">登録</button>
     </div>
     </div>

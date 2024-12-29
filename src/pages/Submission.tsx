@@ -3,11 +3,13 @@ import { FormalinContext } from '../context/FormalinContext';
 import FormalinTable from '../components/FormalinTable';
 import { Formalin } from '../types/Formalin';
 import { parseFormalinCode } from '../utils/parseFormalinCode';
+import { useUserContext } from '../context/UserContext';
 
 const Submission: React.FC = () => {
   const { formalinList, updateFormalinStatus } = useContext(FormalinContext);
   const inputRef = useRef<HTMLInputElement>(null);
   const [errorMessage, setErrorMessage] = useState<string>('');
+  const { user } = useUserContext();
 
   // 親要素のref
   const containerRef = useRef<HTMLDivElement>(null);
@@ -51,7 +53,7 @@ const Submission: React.FC = () => {
         }
 
         const { serialNumber } = parsed;
-        console.log("serialNumber is ", serialNumber);
+        // console.log("serialNumber is ", serialNumber);
 
         const existingFormalin = formalinList.find((f: Formalin) => f.key === serialNumber);
         if (existingFormalin) {
@@ -59,7 +61,9 @@ const Submission: React.FC = () => {
             await updateFormalinStatus(existingFormalin.id, {
               status: '提出済み',
               timestamp: new Date(),
-            });
+            },
+            user?.username || 'anonymous'
+          );
             setErrorMessage('');
           } else {
             setErrorMessage('このホルマリンは出庫されていません。');
