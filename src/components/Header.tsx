@@ -1,70 +1,14 @@
-import React, { useEffect, useState } from 'react';
+
 import { Link } from 'react-router-dom';
-import { auth, db } from '../firebase';
-import { useAuthState } from 'react-firebase-hooks/auth';
-import { doc, getDoc } from 'firebase/firestore';
-import { signOut } from 'firebase/auth';
+import { useUserContext } from '../context/UserContext';
 
 const Header: React.FC = () => {
 
-  const handleLogout = () => {
-    signOut(auth);
-  };
+  const { user, logout } = useUserContext();
 
-  // Firebase Authentication のユーザー状態を取得
-  const [currentUser, loadingAuth, errorAuth] = useAuthState(auth);
-
-  // ユーザー名を保持する状態変数
-  const [username, setUsername] = useState<string | null>(null);
-  const [loadingUsername, setLoadingUsername] = useState<boolean>(true);
-  const [isAdmin, setIsAdmin] = useState<boolean>(false);
-
-  // ユーザー名を取得するための副作用フック
-  useEffect(() => {
-    const fetchUsername = async () => {
-      if (currentUser) {
-        try {
-          const userDocRef = doc(db, 'users', currentUser.uid);
-          console.log("currentUser is :", currentUser.uid);
-          const userDoc = await getDoc(userDocRef);
-          console.log("userDoc is :", userDoc);
-          if (userDoc.exists()) {
-            const userData = userDoc.data();
-            console.log("userData is :", userData);
-            setUsername(userData?.username);
-            setIsAdmin(userData?.isAdmin === true);
-          } else {
-            console.error('ユーザードキュメントが存在しません。');
-            setUsername(null); // ユーザー名をリセット
-            setIsAdmin(false);
-          }
-        } catch (error) {
-          console.error('ユーザー名の取得中にエラーが発生しました:', error);
-          setUsername(null); // ユーザー名をリセット
-          setIsAdmin(false);
-        } finally {
-          setLoadingUsername(false);
-        }
-      } else {
-        // currentUser が null の場合、username と isAdmin をリセット
-        setUsername(null);
-        setIsAdmin(false);
-        setLoadingUsername(false);
-      }
-    };
-
-    fetchUsername();
-  }, [currentUser]);
-
-  // ローディング中は何も表示しない（またはローディングスピナーを表示）
-  if (loadingAuth || loadingUsername) {
-    return null;
-  }
-
-  // エラーが発生した場合の処理
-  if (errorAuth) {
-    console.error('認証エラー:', errorAuth);
-  }
+  // user が null なら未ログイン
+  const username = user?.username || null;
+  const isAdmin  = user?.isAdmin || false;
 
   return (
     // bg-gray-800: 背景色を暗いグレーに設定。
@@ -149,14 +93,25 @@ const Header: React.FC = () => {
             </>
           )}
           
-          <button onClick={handleLogout} className="text-lg hover:text-yellow-400 transition duration-300 ml-4">
-            ログアウト
-          </button>
-          {/* ユーザー名の表示 */}
-          {username && (
-            <div className="ml-8 text-sm">
-              {username} さん
-            </div>
+          {/* ログインしていればログアウト表示、していなければログイン表示 */}
+          {username ? (
+            <>
+              <button
+                onClick={logout}
+                className="text-lg hover:text-yellow-400 transition duration-300 ml-4"
+              >
+                ログアウト
+              </button>
+              <div className="ml-8 text-sm">
+                {username} さん
+              </div>
+            </>
+          ) : (
+            <li className="mx-4">
+              <Link to="/login" className="text-xl hover:text-yellow-400 transition duration-300">
+                ログイン
+              </Link>
+            </li>
           )}
         </ul>      
       </nav>
