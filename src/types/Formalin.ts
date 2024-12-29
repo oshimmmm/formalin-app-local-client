@@ -1,5 +1,5 @@
 export interface Formalin {
-  id: number;                // PostgreSQLのSERIALが入る
+  id: number;
   key: string;
   place: string;
   status: string;
@@ -7,11 +7,11 @@ export interface Formalin {
   size: string;
   expired: Date;
   lotNumber: string;
-  history: HistoryEntry[];   // 複数の履歴を保持
+  history: HistoryEntry[];  // 必須
 }
 
 export interface HistoryEntry {
-  history_id?: number;       // PostgreSQL で自動採番される場合もあるので任意
+  history_id?: number;
   updatedBy: string;
   updatedAt: Date;
   oldStatus: string;
@@ -20,6 +20,8 @@ export interface HistoryEntry {
   newPlace: string;
 }
 
+// 新規登録時に使う型
+export type NewFormalin = Omit<Formalin, 'id' | 'history'>;
 
 // export interface Formalin {
 //   id: string; // FirestoreのドキュメントID
