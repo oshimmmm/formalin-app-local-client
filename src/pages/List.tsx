@@ -59,9 +59,18 @@ const List: React.FC = () => {
       {selectedHistoryKey && (
         <Modal onClose={() => setSelectedHistoryKey(null)}>
           <h2 className='text-xl mb-4'>更新履歴: {selectedHistoryKey}</h2>
-          {Array.isArray(history) && history.length > 0 ? (
+          {(() => {
+            if (!Array.isArray(history) || history.length === 0) {
+              return <p>履歴はありません</p>;
+            }
+            const sortedHistory = [...history].sort((a: any, b: any) => {
+              const aTime = new Date(a.updatedAt).getTime();
+              const bTime = new Date(b.updatedAt).getTime();
+              return bTime - aTime; // 新しい日時が先頭
+            });
+            return (
             <ul className='list-disc list-inside'>
-              {history.map((h: any, index: number) => (
+              {sortedHistory.map((h: any, index: number) => (
                 <li key={index}>
                   <div>更新者: {h.updatedBy}</div>
                   <div>更新日時: {h.updatedAt ? new Date(h.updatedAt).toLocaleString() : '不明'}</div>
@@ -72,9 +81,8 @@ const List: React.FC = () => {
                 </li>
               ))}
             </ul>
-          ) : (
-            <p>履歴はありません</p>
-          )}
+            )
+          })()}
         </Modal>
       )}
     </div>
