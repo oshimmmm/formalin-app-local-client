@@ -3,11 +3,13 @@ import { FormalinContext } from '../context/FormalinContext';
 import FormalinTable from '../components/FormalinTable';
 import { Formalin } from '../types/Formalin';
 import { parseFormalinCode } from '../utils/parseFormalinCode';
+import { useUserContext } from '../context/UserContext';
 
 const Ingress: React.FC = () => {
   const { formalinList, addFormalin } = useContext(FormalinContext);
   const [errorMessage, setErrorMessage] = useState<string>('');
   const inputRef = useRef<HTMLInputElement>(null);
+  const { user } = useUserContext(); // ログイン中ユーザー
 
   useEffect(() => {
     if (inputRef.current) {
@@ -31,6 +33,9 @@ const Ingress: React.FC = () => {
 
         const { serialNumber, size, expirationDate, lotNumber } = parsed;
 
+        const now = new Date();
+        const timeDate = new Date(Date.UTC(now.getFullYear(), now.getMonth(), now.getDate(), now.getHours(), now.getMinutes(), now.getSeconds()));
+
         // 既存のホルマリンを検索
         const existingFormalin = formalinList.find((f) => f.key === serialNumber);
         if (existingFormalin) {
@@ -41,13 +46,16 @@ const Ingress: React.FC = () => {
             key: serialNumber,
             place: '病理',
             status: '入庫済み',
-            timestamp: new Date(),
+            timestamp: timeDate,
             size: size,
             expired: expirationDate,
             lotNumber: lotNumber,
-          });
+          },
+          user?.username || 'anonymous'
+        );
           setErrorMessage('');
         }
+        // console.log("formalinList is: ", formalinList);
         target.value = '';
       }
     }

@@ -3,6 +3,7 @@ import { FormalinContext } from '../context/FormalinContext';
 import FormalinTable from '../components/FormalinTable';
 import { Formalin } from '../types/Formalin';
 import { parseFormalinCode } from '../utils/parseFormalinCode';
+import { useUserContext } from '../context/UserContext';
 
 const Egress: React.FC = () => {
   // useContextを使うことで、FormalinContext内のFormalinListやupdateFormalinStatusにアクセスして、データの取得、表示、更新を行う。
@@ -10,6 +11,7 @@ const Egress: React.FC = () => {
   const inputRef = useRef<HTMLInputElement>(null);
   const [selectedPlace, setSelectedPlace] = useState<string>('');
   const [errorMessage, setErrorMessage] = useState<string>('');
+  const { user } = useUserContext();
 
   useEffect(() => {
     if (inputRef.current) {
@@ -52,7 +54,9 @@ const Egress: React.FC = () => {
             status: '出庫済み',
             place: selectedPlace,
             timestamp: new Date(),
-          });
+          },
+          user?.username || 'anonymous'
+        );
           setErrorMessage('');
         } else {
           // エラーメッセージを表示
