@@ -12,9 +12,14 @@ export const getFormalinData = async (): Promise<Formalin[]> => {
   // サーバーからは timestamp, expired, history.updatedAt が文字列で返るので、Dateに変換。
   const list = response.data.map((item: any) => {
     return {
-      ...item,
+      id: item.id,
+      key: item.key,
+      place: item.place,
+      status: item.status,
       timestamp: item.timestamp ? new Date(item.timestamp) : new Date(),
       expired: item.expired ? new Date(item.expired) : new Date(),
+      lotNumber: item.lot_number, // サーバーが lot_number として返しているから返還
+      size: item.size,
       history: item.history.map((h: any) => ({
         ...h,
         updatedAt: h.updatedAt ? new Date(h.updatedAt) : new Date(),
