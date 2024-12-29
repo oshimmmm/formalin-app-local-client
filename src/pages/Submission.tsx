@@ -55,12 +55,15 @@ const Submission: React.FC = () => {
         const { serialNumber } = parsed;
         // console.log("serialNumber is ", serialNumber);
 
+        const now = new Date();
+        const timeDate = new Date(Date.UTC(now.getFullYear(), now.getMonth(), now.getDate(), now.getHours(), now.getMinutes(), now.getSeconds()));
+
         const existingFormalin = formalinList.find((f: Formalin) => f.key === serialNumber);
         if (existingFormalin) {
           if (existingFormalin.status === '出庫済み') {
             await updateFormalinStatus(existingFormalin.id, {
               status: '提出済み',
-              timestamp: new Date(),
+              timestamp: timeDate,
             },
             user?.username || 'anonymous'
           );

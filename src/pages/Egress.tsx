@@ -46,6 +46,9 @@ const Egress: React.FC = () => {
 
         const { serialNumber } = parsed;
 
+        const now = new Date();
+        const timeDate = new Date(Date.UTC(now.getFullYear(), now.getMonth(), now.getDate(), now.getHours(), now.getMinutes(), now.getSeconds()));
+
         // 既存のホルマリンを検索
         const existingFormalin = formalinList.find((f: Formalin) => f.key === serialNumber);
         if (existingFormalin) {
@@ -53,7 +56,7 @@ const Egress: React.FC = () => {
           await updateFormalinStatus(existingFormalin.id, {
             status: '出庫済み',
             place: selectedPlace,
-            timestamp: new Date(),
+            timestamp: timeDate,
           },
           user?.username || 'anonymous'
         );

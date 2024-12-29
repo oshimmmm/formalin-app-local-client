@@ -81,10 +81,14 @@ const Admin: React.FC = () => {
       return;
     }
 
+    const now = new Date();
+    const timeDate = new Date(Date.UTC(now.getFullYear(), now.getMonth(), now.getDate(), now.getHours(), now.getMinutes(), now.getSeconds()));
+
     // ここで Context の updateFormalin を呼び、DB更新
     await updateFormalin(id, {
       place: targetPost.place,
       status: targetPost.status,
+      timestamp: timeDate,
     },
     user?.username || 'anonymous'
   );

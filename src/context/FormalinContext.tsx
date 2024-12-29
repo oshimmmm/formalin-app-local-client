@@ -45,7 +45,8 @@ export const FormalinProvider: React.FC<FormalinProviderProps> = ({ children }) 
     fetchData();
   }, []);
 
-  // addFormalin
+  // 入庫処理
+  // 入庫画面から渡される情報は、NewFormalin型で定義したデータ内容と、更新者のusername
   const addFormalin = async (formalin: NewFormalin, updatedBy?: string) => {
     try {
       const historyEntry = {
@@ -56,6 +57,7 @@ export const FormalinProvider: React.FC<FormalinProviderProps> = ({ children }) 
         oldPlace: '',
         newPlace: formalin.place,
       };
+      // 入庫画面から渡された情報とhistoryEntryをaddFormalinData（formalinService.tsx）に渡す
       await addFormalinData(formalin, historyEntry);
 
       // 追加後に再取得
@@ -66,7 +68,8 @@ export const FormalinProvider: React.FC<FormalinProviderProps> = ({ children }) 
     }
   };
 
-  // updateFormalinStatus
+  // 出庫処理
+  // 出庫画面から渡される情報は、existingFormalin.id（出庫済みのホルマリンのid）と、Formalin型で定義したデータ内容の一部（status, place, timestamp）と、更新者のusername
   const updateFormalinStatus = async (id: number, data: Partial<Formalin>, updatedBy?: string) => {
     try {
       const oldData = formalinList.find((f) => f.id === id);
@@ -81,6 +84,7 @@ export const FormalinProvider: React.FC<FormalinProviderProps> = ({ children }) 
         newPlace: data.place || '',
       };
 
+      // 出庫画面から渡された情報とhistoryEntryをupdateFormalinData（formalinService.tsx）に渡す
       await updateFormalinData(id, data, historyEntry);
 
       // 更新後に再取得
@@ -91,7 +95,7 @@ export const FormalinProvider: React.FC<FormalinProviderProps> = ({ children }) 
     }
   };
 
-  // removeFormalin
+  // 管理者専用ページ（Admin.tsx）
   const removeFormalin = async (id: number) => {
     try {
       await deleteFormalinData(id);
@@ -102,7 +106,7 @@ export const FormalinProvider: React.FC<FormalinProviderProps> = ({ children }) 
     }
   };
 
-  // updateFormalin (任意のフィールド更新)
+  // 管理者専用ページ（Admin.tsx）
   const updateFormalin = async (id: number, data: Partial<Formalin>, updatedBy?: string) => {
     try {
       const oldData = formalinList.find((f) => f.id === id);
