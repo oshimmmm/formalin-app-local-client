@@ -3,6 +3,7 @@ import React, { useContext, useEffect, useState } from 'react';
 import { FormalinContext } from '../context/FormalinContext';
 import { parseFormalinCode } from '../utils/parseFormalinCode';
 import { Formalin } from '../types/Formalin';
+import { useUserContext } from '../context/UserContext';
 
 const Admin: React.FC = () => {
   // PostgreSQL用に書き換え済みの context から取得
@@ -14,6 +15,7 @@ const Admin: React.FC = () => {
 
   const [serialNumber, setSerialNumber] = useState<string | null>(null);
   const [errorMessage, setErrorMessage] = useState<string>('');
+  const { user } = useUserContext();
 
   // 選択可能な出庫先（場所）
   const places = ['病理', '内視鏡', '外科', '内科', '病棟'];
@@ -83,7 +85,9 @@ const Admin: React.FC = () => {
     await updateFormalin(id, {
       place: targetPost.place,
       status: targetPost.status,
-    });
+    },
+    user?.username || 'anonymous'
+  );
 
     // Context が DB を再取得して formalinList を更新 → useEffect => setPosts(formalinList)
     // もしすぐにローカル画面を最新化したいなら、手動で setPosts(formalinList) も可
