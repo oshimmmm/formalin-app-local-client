@@ -1,0 +1,25 @@
+# Dockerfile.client
+
+# 1) build用ステージ (NodeでReactビルド)
+FROM node:20-alpine as build
+
+WORKDIR /app
+COPY package*.json ./
+RUN npm install
+COPY . .
+RUN npm run build
+
+# 2) Nginxステージ (軽量Webサーバーで静的ファイルを配信)
+FROM nginx:alpine
+
+# ★ ここで tzdata をインストールして JST を設定
+RUN apk add --no-cache tzdata \
+ && cp /usr/share/zoneinfo/Asia/Tokyo /etc/localtime \
+ && echo "Asia/Tokyo" > /etc/timezone
+
+COPY --from=build /app/build /usr/share/nginx/html
+
+# ポート80で配信
+EXPOSE 80
+
+CMD ["nginx", "-g", "daemon off;"]

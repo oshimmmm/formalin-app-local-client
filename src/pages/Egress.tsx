@@ -1,12 +1,12 @@
+// Egress.tsx
 import React, { useContext, useRef, useEffect, useState, KeyboardEvent } from 'react';
 import { FormalinContext } from '../context/FormalinContext';
 import FormalinTable from '../components/FormalinTable';
-import { Formalin } from '../types/Formalin';
 import { parseFormalinCode } from '../utils/parseFormalinCode';
 import { useUserContext } from '../context/UserContext';
+import { Formalin } from '../types/Formalin';
 
 const Egress: React.FC = () => {
-  // useContextを使うことで、FormalinContext内のFormalinListやupdateFormalinStatusにアクセスして、データの取得、表示、更新を行う。
   const { formalinList, updateFormalinStatus } = useContext(FormalinContext);
   const inputRef = useRef<HTMLInputElement>(null);
   const [selectedPlace, setSelectedPlace] = useState<string>('');
@@ -19,6 +19,7 @@ const Egress: React.FC = () => {
     }
   }, []);
 
+  // 「出庫済み」の一覧を抽出
   const egressedList = formalinList.filter((f: Formalin) => f.status === '出庫済み');
 
   const handlePlaceChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
@@ -37,7 +38,7 @@ const Egress: React.FC = () => {
           return;
         }
 
-        // 出庫先が選択されていない場合はエラーメッセージ表示
+        // 出庫先が未選択ならエラー
         if (selectedPlace === '') {
           setErrorMessage('出庫先を選択してください。');
           target.value = '';
@@ -46,23 +47,29 @@ const Egress: React.FC = () => {
 
         const { serialNumber } = parsed;
 
-        const now = new Date();
-        const timeDate = new Date(Date.UTC(now.getFullYear(), now.getMonth(), now.getDate(), now.getHours(), now.getMinutes(), now.getSeconds()));
-
         // 既存のホルマリンを検索
-        const existingFormalin = formalinList.find((f: Formalin) => f.key === serialNumber);
+        const existingFormalin = formalinList.find((f) => f.key === serialNumber);
         if (existingFormalin) {
-          // 既存の場合、状態と場所を更新
-          await updateFormalinStatus(existingFormalin.id, {
-            status: '出庫済み',
-            place: selectedPlace,
-            timestamp: timeDate,
-          },
-          user?.username || 'anonymous'
-        );
+          // ここで現在時刻を文字列に変換（例：ISO8601）
+          const now = new Date();
+          const isoString = now.toISOString();
+
+          // 既存の場合、状態と場所などを更新
+          await updateFormalinStatus(
+            existingFormalin.id,
+            {
+              status: '出庫済み',
+              place: selectedPlace,
+              // 旧: timestamp: timeDate
+              // 新: timestamp_str: isoString
+              timestamp_str: isoString,
+            },
+            user?.username || 'anonymous'
+          );
           setErrorMessage('');
+          console.log("出庫処理での時刻(ISO):", isoString);
         } else {
-          // エラーメッセージを表示
+          // 入庫されていない
           setErrorMessage('入庫されていません。');
         }
         target.value = '';
@@ -74,13 +81,14 @@ const Egress: React.FC = () => {
     <div>
       <h1 className='text-3xl font-bold mt-4 mb-10 ml-10'>出庫する</h1>
 
-      <label htmlFor="place-select" className='text-2xl ml-10'>出庫先を選択してください: </label>
-      <select 
-        id="place-select" 
-        value={selectedPlace} 
+      <label htmlFor="place-select" className='text-2xl ml-10'>
+        出庫先を選択してください:
+      </label>
+      <select
+        id="place-select"
+        value={selectedPlace}
         onChange={handlePlaceChange}
-        className="text-2xl border border-gray-300 rounded p-2 w-1/5"
-        // style={{ fontSize: '1.5em', padding: '10px', width: '20%' }}
+        className="text-2xl border border-gray-300 rounded p-2 w-1/5 ml-4"
       >
         <option value=""></option>
         <option value="病理">病理</option>
@@ -98,17 +106,14 @@ const Egress: React.FC = () => {
         onKeyPress={handleScan}
         placeholder="二次元バーコードを読み込んでください"
         className="text-2xl border border-gray-300 rounded p-2 w-1/3 ml-10"
-        // style={{ fontSize: '1.5em', padding: '10px', width: '30%' }}
       />
 
-      {/* エラーメッセージの表示 */}
       {errorMessage && <p className='text-red-500 ml-10'>{errorMessage}</p>}
 
       <h2 className='text-xl mx-10 mt-8 mb-2'>出庫済みホルマリン一覧</h2>
       <div className='ml-10'>
-      <FormalinTable formalinList={egressedList} />
+        <FormalinTable formalinList={egressedList} />
       </div>
-      
     </div>
   );
 };

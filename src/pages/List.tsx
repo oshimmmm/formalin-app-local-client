@@ -3,6 +3,7 @@ import { FormalinContext } from '../context/FormalinContext';
 import FormalinTable from '../components/FormalinTable';
 import Modal from '../components/Modal';
 import { parseFormalinCode } from '../utils/parseFormalinCode';
+import { utcStringToJstString } from '../utils/formatDate';
 
 const List: React.FC = () => {
   const { formalinList } = useContext(FormalinContext);
@@ -38,6 +39,7 @@ const List: React.FC = () => {
   // showHistoryForKeyがnullでなければ、そのキーに対応するfを取得
   const selectedFormalin = selectedHistoryKey ? formalinList.find(f => f.key === selectedHistoryKey) : null;
   const history = (selectedFormalin && (selectedFormalin as any).history) || [];
+  console.log("history is :", history);
 
   return (
     <div>
@@ -73,7 +75,7 @@ const List: React.FC = () => {
               {sortedHistory.map((h: any, index: number) => (
                 <li key={index}>
                   <div>更新者: {h.updatedBy}</div>
-                  <div>更新日時: {h.updatedAt ? new Date(h.updatedAt).toLocaleString() : '不明'}</div>
+                  <div>更新日時: {h.updatedAt ? utcStringToJstString(h.updatedAt) : '不明'}</div>
                   <div>旧ステータス: {h.oldStatus}</div>
                   <div>新ステータス: {h.newStatus}</div>
                   <div>旧場所: {h.oldPlace}</div>

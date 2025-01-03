@@ -3,7 +3,7 @@ export interface Formalin {
   key: string;
   place: string;
   status: string;
-  timestamp: Date;
+  timestamp_str: string;
   size: string;
   expired: Date;
   lotNumber: string;
@@ -13,7 +13,7 @@ export interface Formalin {
 export interface HistoryEntry {
   history_id?: number;
   updatedBy: string;
-  updatedAt: Date;
+  updatedAt_str?: string;
   oldStatus: string;
   newStatus: string;
   oldPlace: string;

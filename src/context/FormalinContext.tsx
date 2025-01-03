@@ -16,6 +16,7 @@ interface FormalinContextProps {
   updateFormalin: (id: number, data: Partial<Formalin>, updatedBy?: string) => Promise<void>;
 }
 
+
 export const FormalinContext = createContext<FormalinContextProps>({
   formalinList: [],
   addFormalin: async () => {},
@@ -57,6 +58,7 @@ export const FormalinProvider: React.FC<FormalinProviderProps> = ({ children }) 
         oldPlace: '',
         newPlace: formalin.place,
       };
+      console.log("historyEntry is ", historyEntry);
       // 入庫画面から渡された情報とhistoryEntryをaddFormalinData（formalinService.tsx）に渡す
       await addFormalinData(formalin, historyEntry);
 

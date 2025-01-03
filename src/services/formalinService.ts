@@ -16,13 +16,12 @@ export const getFormalinData = async (): Promise<Formalin[]> => {
       key: item.key,
       place: item.place,
       status: item.status,
-      timestamp: item.timestamp ? new Date(item.timestamp) : new Date(),
+      timestamp_str: item.timestamp_str,
       expired: item.expired ? new Date(item.expired) : new Date(),
       lotNumber: item.lot_number, // サーバーが lot_number として返しているから返還
       size: item.size,
       history: item.history.map((h: any) => ({
         ...h,
-        updatedAt: h.updatedAt ? new Date(h.updatedAt) : new Date(),
       })),
     } as Formalin;
   });
@@ -39,16 +38,18 @@ export const addFormalinData = async (
     key: formalin.key,
     place: formalin.place,
     status: formalin.status,
-    timestamp: formalin.timestamp,
+    timestamp_str: formalin.timestamp_str, // Data型からString型にしてbodyへ
     size: formalin.size,
     expired: formalin.expired,
     lotNumber: formalin.lotNumber,
     updatedBy: initialHistoryEntry?.updatedBy || undefined,
+    updatedAt_str: initialHistoryEntry?.updatedAt_str, // Data型からString型にしてbodyへ
     oldStatus: initialHistoryEntry?.oldStatus || undefined,
     newStatus: initialHistoryEntry?.newStatus || undefined,
     oldPlace: initialHistoryEntry?.oldPlace || undefined,
     newPlace: initialHistoryEntry?.newPlace || undefined,
   };
+  console.log("body is :", body);
 
   await axios.post(`${API_BASE_URL}/formalin`, body);
 };
@@ -63,7 +64,7 @@ export const updateFormalinData = async (
     key: data.key,
     place: data.place,
     status: data.status,
-    timestamp: data.timestamp,
+    timestamp_str: data.timestamp_str,
     size: data.size,
     expired: data.expired,
     lotNumber: data.lotNumber,
