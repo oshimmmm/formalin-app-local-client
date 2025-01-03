@@ -15,9 +15,6 @@ export function utcStringToJstString(utcString?: string): string | null {
     return null;
   }
 
-  // 2) JST化 (+9時間)
-  dateUtc.setHours(dateUtc.getHours() + 9);
-
   // 3) "YYYY-MM-DD HH:mm:ss" 形式の文字列を作成
   const year  = dateUtc.getFullYear();
   const month = String(dateUtc.getMonth() + 1).padStart(2, '0');

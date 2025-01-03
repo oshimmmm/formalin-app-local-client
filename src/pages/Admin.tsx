@@ -1,5 +1,4 @@
 // src/pages/Admin.tsx
-
 import React, { useContext, useEffect, useState } from 'react';
 import { FormalinContext } from '../context/FormalinContext';
 import { parseFormalinCode } from '../utils/parseFormalinCode';
@@ -7,19 +6,26 @@ import { Formalin } from '../types/Formalin';
 import { useUserContext } from '../context/UserContext';
 
 const Admin: React.FC = () => {
+  // PostgreSQL用に書き換え済みの context から取得
   const { formalinList, removeFormalin, updateFormalin } = useContext(FormalinContext);
+
+  // ローカル state に posts を持ち、状況に応じて編集。
+  // ※ 直接 formalinList を使ってもOKですが、「編集途中の値を持つために」あえてローカルを使う例。
   const [posts, setPosts] = useState<Formalin[]>([]);
+
   const [serialNumber, setSerialNumber] = useState<string | null>(null);
   const [errorMessage, setErrorMessage] = useState<string>('');
-  const { user } = useUserContext(); // ログイン中ユーザー
+  const { user } = useUserContext();
 
+  // 選択可能な出庫先（場所）
   const places = ['病理', '内視鏡', '外科', '内科', '病棟'];
 
+  // ============ 1) ContextのformalnListをローカルpostsに反映 ============
   useEffect(() => {
     setPosts(formalinList);
   }, [formalinList]);
 
-  // バーコード読み取り
+  // ============ 2) バーコード読取 → シリアル番号を state に保持 ============
   const handleBarcodeInput = (e: React.KeyboardEvent<HTMLInputElement>) => {
     if (e.key === 'Enter') {
       const code = (e.target as HTMLInputElement).value.trim();
@@ -34,19 +40,21 @@ const Admin: React.FC = () => {
     }
   };
 
-  // serialNumber があればフィルタリング
+  // ============ 3) serialNumber があれば、それにマッチする key だけ表示 ============
   const filteredPosts = serialNumber
     ? posts.filter((post) => post.key === serialNumber)
     : posts;
 
-  // 削除ボタン
+  // ============ 4) 削除ボタン → removeFormalin 呼び出し → 再同期 ============
   const handleDelete = async (id: number) => {
     if (window.confirm('本当に削除しますか？')) {
       await removeFormalin(id);
+      // removeFormalin後、Context側がDB再取得し formalinList が更新されれば useEffectにより自動再同期
+      // ここで手動同期するなら: setPosts(formalinList);
     }
   };
 
-  // Place変更（ローカルstateを更新）
+  // ============ 5) Place変更 (ローカルstateを更新) ============
   const handlePlaceChange = (id: number, newPlace: string) => {
     setPosts((prev) =>
       prev.map((post) =>
@@ -55,7 +63,7 @@ const Admin: React.FC = () => {
     );
   };
 
-  // Status変更（ローカルstateを更新）
+  // ============ 6) Status変更 (ローカルstateを更新) ============
   const handleStatusChange = (id: number, newStatus: string) => {
     setPosts((prev) =>
       prev.map((post) =>
@@ -64,7 +72,7 @@ const Admin: React.FC = () => {
     );
   };
 
-  // 「更新」ボタンでDB更新
+  // ============ 7) 「更新」ボタンでDB更新 → 再同期 ============
   const handleUpdateData = async (id: number) => {
     const targetPost = posts.find((p) => p.id === id);
     if (!targetPost) return;
@@ -73,21 +81,20 @@ const Admin: React.FC = () => {
       return;
     }
 
-    // ここで Date を文字列化して渡す
     const now = new Date();
-    const isoString = now.toISOString();
+    const timeDate = new Date(Date.UTC(now.getFullYear(), now.getMonth(), now.getDate(), now.getHours() - 9, now.getMinutes(), now.getSeconds()));
 
-    await updateFormalin(
-      id,
-      {
-        // Partial<Formalin>
-        place: targetPost.place,
-        status: targetPost.status,
-        // timestamp_str: string
-        timestamp_str: isoString,
-      },
-      user?.username || 'anonymous'
-    );
+    // ここで Context の updateFormalin を呼び、DB更新
+    await updateFormalin(id, {
+      place: targetPost.place,
+      status: targetPost.status,
+      timestamp: timeDate,
+    },
+    user?.username || 'anonymous'
+  );
+
+    // Context が DB を再取得して formalinList を更新 → useEffect => setPosts(formalinList)
+    // もしすぐにローカル画面を最新化したいなら、手動で setPosts(formalinList) も可
   };
 
   return (
@@ -119,9 +126,15 @@ const Admin: React.FC = () => {
             <tr
               key={post.id}
               className="bg-white hover:bg-gray-50"
+              onMouseEnter={(e) => {
+                e.currentTarget.style.backgroundColor = '#f9f9f9';
+              }}
+              onMouseLeave={(e) => {
+                e.currentTarget.style.backgroundColor = '#fff';
+              }}
             >
               <td className="border border-gray-300 p-2.5">
-                {post.key}
+                {post.key /* PostgreSQLの"SERIAL ID"とは別に、試薬IDとしてのkey */}
               </td>
 
               <td className="border border-gray-300 p-2.5">

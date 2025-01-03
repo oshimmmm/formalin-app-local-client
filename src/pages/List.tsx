@@ -75,7 +75,13 @@ const List: React.FC = () => {
               {sortedHistory.map((h: any, index: number) => (
                 <li key={index}>
                   <div>更新者: {h.updatedBy}</div>
-                  <div>更新日時: {h.updatedAt ? utcStringToJstString(h.updatedAt) : '不明'}</div>
+                  <div>
+  更新日時:
+  {h.updatedAt
+    ? new Date(h.updatedAt).toLocaleString("ja-JP", { timeZone: "Asia/Tokyo" })
+    : '不明'
+  }
+</div>
                   <div>旧ステータス: {h.oldStatus}</div>
                   <div>新ステータス: {h.newStatus}</div>
                   <div>旧場所: {h.oldPlace}</div>
