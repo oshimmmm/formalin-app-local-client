@@ -79,7 +79,7 @@ const Header: React.FC = () => {
                   to="/register"
                   className="text-xl hover:text-yellow-400 transition duration-300"
                 >
-                  ユーザー登録
+                  ユーザー管理
                 </Link>
               </li>
               <li className="mx-4">
