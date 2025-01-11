@@ -58,10 +58,10 @@ const FormalinTable: React.FC<FormalinTableProps> = ({ formalinList, showLotNumb
     status: Array.from(new Set(formalinList.map((item) => item.status))),
     timestamp: Array.from(
       // toLocaleStringメソッドで文字列に変換
-      new Set(formalinList.map((item) => item.timestamp.toLocaleString()))
+      new Set(formalinList.map((item) => item.timestamp ? item.timestamp.toLocaleString() : '未設定'))
     ),
     size: Array.from(new Set(formalinList.map((item) => item.size))),
-    expired: Array.from(new Set(formalinList.map((item) => item.expired.toLocaleString()))),
+    expired: Array.from(new Set(formalinList.map((item) => item.expired ? item.expired.toLocaleString() : '未設定'))),
     lotNumber: Array.from(new Set(formalinList.map((item) => item.lotNumber)))
   };
   // console.log("uniqueValues is: ", uniqueValues);
@@ -348,7 +348,7 @@ const FormalinTable: React.FC<FormalinTableProps> = ({ formalinList, showLotNumb
               {f.status}
             </td>
             <td className="border border-gray-300 p-2">
-              {f.timestamp.toLocaleString("ja-JP", { timeZone: "Asia/Tokyo" })}
+              {f.timestamp ? f.timestamp.toLocaleString("ja-JP", { timeZone: "Asia/Tokyo" }) : '--'}
             </td>
             <td className="border border-gray-300 p-2">
               {f.size}

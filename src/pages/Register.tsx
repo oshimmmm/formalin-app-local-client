@@ -107,6 +107,43 @@ const Register: React.FC = () => {
     }
   };
 
+  // ユーザー削除ハンドラ
+  const handleDelete = async () => {
+    if (!selectedUsername) {
+      setEditError('削除するユーザーを選択してください。');
+      return;
+    }
+
+    const confirmDelete = window.confirm('本当に削除しますか？');
+    if (!confirmDelete) {
+      return;
+    }
+
+    try {
+      const response = await axios.delete('http://localhost:3001/api/delete-user', {
+        data: { username: selectedUsername },
+      });
+
+      if (response.data.success) {
+        // 削除後、ユーザー一覧を再取得
+        const usersResponse = await axios.get('http://localhost:3001/api/users');
+        setUsers(usersResponse.data.users);
+        // フォームをリセット
+        setSelectedUsername('');
+        setEnteredPassword('');
+        setNewPassword('');
+        setNewIsAdmin(false);
+        setShowConfirmFields(false);
+        alert('ユーザーが削除されました。');
+      } else {
+        setEditError(response.data.message || '削除に失敗しました。');
+      }
+    } catch (err) {
+      setEditError('削除に失敗しました。');
+      console.error('削除エラー:', err);
+    }
+  };
+
   return (
     <div className="flex flex-row min-h-screen bg-gray-100">
       {/* 左半分: ユーザー登録 */}
@@ -209,6 +246,15 @@ const Register: React.FC = () => {
                 disabled={!newPassword}
               >
                 決定
+              </button>
+
+              {/* ユーザー削除ボタン */}
+              <button
+                onClick={handleDelete}
+                className={`w-full bg-red-500 text-white p-2 rounded hover:bg-red-600 mt-8 ${!selectedUsername ? 'opacity-50 cursor-not-allowed' : ''}`}
+                disabled={!selectedUsername}
+              >
+                ユーザーを削除
               </button>
             </div>
           )}
